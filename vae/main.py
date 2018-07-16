@@ -54,14 +54,14 @@ writer = SummaryWriter(log)
 optimizer = optim.Adam(list(encoder.parameters())+list(decoder.parameters()), lr = args.lr)
 
 def train(epoch):
+	epoch_start_time = time.time()
 	train_loss = 0
 	encoder.train()
 	decoder.train()
-	epoch_start_time = time.time()
 	for batch_idx, (input_data, label) in enumerate(train_loader):
+		start_time = time.time()
 		batch_size = input_data.size()[0]
 		prior = D.Normal(torch.zeros(batch_size, args.latent_size).to(device), torch.ones(batch_size, args.latent_size).to(device))
-		start_time = time.time()
 		optimizer.zero_grad()
 		input_data = input_data.to(device)
 		params = encoder(input_data)
@@ -76,19 +76,17 @@ def train(epoch):
 		reconstruction_loss /= args.L
 		q = D.Normal(z_mu, (z_logvar/ 2).exp())
 		kld_loss = D.kl_divergence(prior, q).sum()
-		writer.add_scalars('scalar groups', {'reconstruction loss': reconstruction_loss.item(),
-											 'KL divergence': kld_loss.item()}, epoch * args.batch_size + batch_idx)
+		writer.add_scalars('scalar groups', {'reconstruction loss': reconstruction_loss.item(),'KL divergence': kld_loss.item()}, epoch * args.batch_size + batch_idx)
 		loss = (reconstruction_loss + kld_loss)/batch_size
 		loss.backward()
 		train_loss += loss.item()
 		optimizer.step()
 		if batch_idx % args.log_interval == 0:
-			print('Train Epoch: {} [{}/{} ({:.0f}%)]\tLoss: {:.6f}\tTime: {:.6f} '.format(
+			print('Train Epoch: {} [{}/{} ({:.0f}%)]\tLoss: {:.6f}\tTime: {:.6f}'.format(
 				epoch, batch_idx * len(input_data), len(train_loader.dataset),
-				100. * batch_idx / len(train_loader),
-				loss.item() / len(input_data), time.time() - start_time))
-	print('====> Epoch: {} Average loss: {:.4f}}\tTime: {:.4f}'.format(
-	epoch, train_loss / len(train_loader.dataset), epoch_start_time - time.time()))
+				100. * batch_idx / len(train_loader), loss.item() / len(input_data), time.time() - start_time))
+	print('====> Epoch: {} Average loss: {:.4f}\tTime: {:.4f}'.format(
+	epoch, train_loss / len(train_loader.dataset), time.time() - epoch_start_time))
 	writer.add_scalar('total loss', train_loss, epoch)
 
 
@@ -113,17 +111,9 @@ def test(epoch):
 			n = min(batch_size, 8)
 			comparison = torch.cat([input_data[:n],
 								  output_data[:n]])
-			# save_image(comparison.cpu(),
-			# 		 log + 'results/reconstruction_' + str(epoch) + '.png', nrow=n)
 			writer.add_image('Reconstruction Image', comparison, epoch)
-		# if epoch == args.epochs-1:
-		#     embeddings = torch.cat([embeddings, z_mu.data.cpu()],0)
-		#     embedding_labels =  torch.cat([embedding_labels, label.float()],0)
-		#     embedding_images = torch.cat([embedding_images, input_data.data.cpu()],0)
 	test_loss /= len(test_loader.dataset)
 	print('====> Test set loss: {:.4f}'.format(test_loss))
-	# if epoch == args.epochs - 1:
-	# 	writer.add_embedding(embeddings, metadata=embedding_labels, label_img = embedding_images)
 
 for epoch in range(args.epochs):
 	train(epoch)
