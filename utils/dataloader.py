@@ -14,6 +14,10 @@ def train_loader(data, data_directory = '/home/sungwonlyu/data', batch_size = 12
         train_dataloader = DataLoader(
             datasets.MNIST(data_directory + '/' + data, train=True, download=True, transform=transforms.ToTensor()),
             batch_size=batch_size, shuffle=True, **kwargs)
+    elif data == 'fashionmnist':
+        train_dataloader = DataLoader(
+            datasets.FashionMNIST(data_directory + '/' + data, train=True, download=True, transform=transforms.ToTensor()),
+            batch_size=batch_size, shuffle=True, **kwargs)
     elif data == 'svhn':
         train_dataloader = DataLoader(
             datasets.SVHN(data_directory + '/' + data, train=True, download=True, transform=transforms.ToTensor()),
@@ -32,6 +36,10 @@ def test_loader(data, data_directory = '/home/sungwonlyu/data', batch_size = 128
     if data == 'mnist':
         test_dataloader = DataLoader(
             datasets.MNIST(data_directory + '/' + data, train=False, transform=transforms.ToTensor()),
+            batch_size=batch_size, shuffle=True, **kwargs)
+    elif data == 'fashionmnist':
+        test_dataloader = DataLoader(
+            datasets.FashionMNIST(data_directory + '/' + data, train=False, transform=transforms.ToTensor()),
             batch_size=batch_size, shuffle=True, **kwargs)
     elif data == 'svhn':
         test_dataloader = DataLoader(
