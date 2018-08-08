@@ -56,6 +56,10 @@ writer = SummaryWriter(log)
 
 optimizer = optim.Adam(list(encoder.parameters())+list(decoder.parameters())+list(nflow.parameters()), lr = args.lr)
 
+def binarize(data):
+	data = data > 0.5
+	return data.float()
+
 def train(epoch):
 	epoch_start_time = time.time()
 	train_loss = 0
@@ -69,6 +73,7 @@ def train(epoch):
 		batch_size = input_data.size()[0]
 		prior = D.Normal(torch.zeros(batch_size, args.latent_size).to(device), torch.ones(batch_size, args.latent_size).to(device))
 		optimizer.zero_grad()
+		input_data = binarize(input_data)
 		input_data = input_data.to(device)
 		z_params = encoder(input_data)
 		z_mu = z_params[:, 0]
@@ -113,6 +118,7 @@ def test(epoch):
 	for i, (input_data, label) in enumerate(test_loader):
 		batch_size = input_data.size()[0]
 		prior = D.Normal(torch.zeros(batch_size, args.latent_size).to(device), torch.ones(batch_size, args.latent_size).to(device))
+		input_data = binarize(input_data)
 		input_data = input_data.to(device)
 		z_params = encoder(input_data)
 		z_mu = z_params[:, 0]
