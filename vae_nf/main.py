@@ -16,8 +16,8 @@ parser = argparser.default_parser()
 parser.add_argument('--input-h', type=int, default=28, metavar='N')
 parser.add_argument('--input-w', type=int, default=28, metavar='N')
 parser.add_argument('--hidden-size', type=int, default=400, metavar='N')
-parser.add_argument('--latent-size', type=int, default=10, metavar='N')
-parser.add_argument('--K', type=int, default=10, metavar='N')
+parser.add_argument('--latent-size', type=int, default=40, metavar='N')
+parser.add_argument('--K', type=int, default=80, metavar='N')
 parser.add_argument('--L', type=int, default=1, metavar='N')
 args = parser.parse_args()
 
@@ -61,6 +61,7 @@ def train(epoch):
 	train_loss = 0
 	r_loss= 0
 	k_loss = 0
+	log_abs_det_jacobian_sum = 0
 	encoder.train()
 	decoder.train()
 	for batch_idx, (input_data, label) in enumerate(train_loader):
@@ -86,12 +87,11 @@ def train(epoch):
 		q = D.Normal(z_mu, (z_logvar/ 2).exp())
 		kld_loss = D.kl_divergence(prior, q).sum()
 		if args.K != 0:
-			kld_loss -= log_abs_det_jacobian.sum()
-		reconstruction_loss /= batch_size
-		kld_loss /= batch_size
+			log_abs_det_jacobian = log_abs_det_jacobian.sum()
+			log_abs_det_jacobian_sum += log_abs_det_jacobian
 		r_loss += reconstruction_loss.item() 
 		k_loss += kld_loss.item()
-		loss = (reconstruction_loss + kld_loss)
+		loss = (reconstruction_loss + kld_loss - log_abs_det_jacobian)
 		loss.backward()
 		train_loss += loss.item()
 		optimizer.step()
@@ -103,6 +103,7 @@ def train(epoch):
 		epoch, train_loss / len(train_loader.dataset), time.time() - epoch_start_time))	
 	writer.add_scalars('Train loss', {'Reconstruction loss': r_loss / len(train_loader.dataset),
 											'KL divergence': k_loss / len(train_loader.dataset),
+											'Determinant': - log_abs_det_jacobian_sum / len(train_loader.dataset),
 											'Train loss': train_loss / len(train_loader.dataset)}, epoch)
 
 def test(epoch):
@@ -123,7 +124,7 @@ def test(epoch):
 		kld_loss = D.kl_divergence(prior, q).sum()
 		if args.K != 0:
 			kld_loss -= log_abs_det_jacobian.sum()
-		loss = (reconstruction_loss + kld_loss) / batch_size
+		loss = reconstruction_loss + kld_loss
 		test_loss += loss.item()
 		if i == 0:
 			n = min(batch_size, 8)
@@ -141,10 +142,10 @@ for epoch in range(args.epochs):
 	sample = D.Normal(torch.zeros(10).to(device), torch.ones(10).to(device))
 	sample_t, log_abs_det_jacobian = nflow(sample.sample(torch.Size([64])))
 	output = decoder(sample_t)
-	if not os.path.exists(log + 'results'):
-		os.mkdir(log + 'results')
-	save_image(output,
-			   log + 'results/sample_' + str(epoch) + '.png')
+	# if not os.path.exists(log + 'results'):
+	# 	os.mkdir(log + 'results')
+	# save_image(output,
+	# 		   log + 'results/sample_' + str(epoch) + '.png')
 	writer.add_image('Sample Image', output, epoch)
 
 torch.save(encoder, log + 'vae_nf_encoder.pt')
