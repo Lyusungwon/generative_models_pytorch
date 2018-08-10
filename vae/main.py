@@ -1,5 +1,5 @@
-import sys
-sys.path.append('../utils/')
+# import sys
+# sys.path.append('../utils/')
 import argparser
 import dataloader
 import model
@@ -56,6 +56,8 @@ optimizer = optim.Adam(list(encoder.parameters())+list(decoder.parameters()), lr
 def train(epoch):
 	epoch_start_time = time.time()
 	train_loss = 0
+	r_loss= 0
+	k_loss = 0
 	encoder.train()
 	decoder.train()
 	for batch_idx, (input_data, label) in enumerate(train_loader):
@@ -75,9 +77,10 @@ def train(epoch):
 			reconstruction_loss += F.binary_cross_entropy(output_data, input_data.detach(), size_average=False)
 		reconstruction_loss /= args.L
 		q = D.Normal(z_mu, (z_logvar/ 2).exp())
-		kld_loss = D.kl_divergence(prior, q).sum()
-		writer.add_scalars('scalar groups', {'reconstruction loss': reconstruction_loss.item(),'KL divergence': kld_loss.item()}, epoch * args.batch_size + batch_idx)
-		loss = (reconstruction_loss + kld_loss)/batch_size
+		kld_loss = D.kl_divergence(q, prior).sum()
+		r_loss += reconstruction_loss.item() 
+		k_loss += kld_loss.item()
+		loss = (reconstruction_loss + kld_loss)
 		loss.backward()
 		train_loss += loss.item()
 		optimizer.step()
@@ -86,9 +89,10 @@ def train(epoch):
 				epoch, batch_idx * len(input_data), len(train_loader.dataset),
 				100. * batch_idx / len(train_loader), loss.item() / len(input_data), time.time() - start_time))
 	print('====> Epoch: {} Average loss: {:.4f}\tTime: {:.4f}'.format(
-	epoch, train_loss / len(train_loader.dataset), time.time() - epoch_start_time))
-	writer.add_scalar('total loss', train_loss, epoch)
-
+		epoch, train_loss / len(train_loader.dataset), time.time() - epoch_start_time))	
+	writer.add_scalars('Train loss', {'Reconstruction loss': r_loss / len(train_loader.dataset),
+											'KL divergence': k_loss / len(train_loader.dataset),
+											'Train loss': train_loss / len(train_loader.dataset)}, epoch)
 
 def test(epoch):
 	encoder.eval()
@@ -104,8 +108,8 @@ def test(epoch):
 		output_data = decoder(z_mu)
 		reconstruction_loss = F.binary_cross_entropy(output_data, input_data, size_average=False)
 		q = D.Normal(z_mu, (z_logvar/ 2).exp())
-		kld_loss = D.kl_divergence(prior, q).sum()
-		loss = (reconstruction_loss + kld_loss) / batch_size
+		kld_loss = D.kl_divergence(q, prior).sum()
+		loss = reconstruction_loss + kld_loss
 		test_loss += loss.item()
 		if i == 0:
 			n = min(batch_size, 8)
@@ -114,8 +118,10 @@ def test(epoch):
 			writer.add_image('Reconstruction Image', comparison, epoch)
 	test_loss /= len(test_loader.dataset)
 	print('====> Test set loss: {:.4f}'.format(test_loss))
+	writer.add_scalar('Test loss', test_loss, epoch)
 
 for epoch in range(args.epochs):
+	batch = 0
 	train(epoch)
 	test(epoch)
 	sample = D.Normal(torch.zeros(10).to(device), torch.ones(10).to(device))
