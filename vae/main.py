@@ -124,7 +124,7 @@ for epoch in range(args.epochs):
 	batch = 0
 	train(epoch)
 	test(epoch)
-	sample = D.Normal(torch.zeros(10).to(device), torch.ones(10).to(device))
+	sample = D.Normal(torch.zeros(args.latent_size).to(device), torch.ones(args.latent_size).to(device))
 	output = decoder(sample.sample(torch.Size([64])))
 	if not os.path.exists(log + 'results'):
 		os.mkdir(log + 'results')
