@@ -13,11 +13,11 @@ from torchvision.utils import save_image
 from tensorboardX import SummaryWriter
 
 parser = argparser.default_parser()
-parser.add_argument('--input-h', type=list, default=28, metavar='N')
-parser.add_argument('--input-w', type=list, default=28, metavar='N')
-parser.add_argument('--hidden-size', type=list, default=400, metavar='N')
-parser.add_argument('--latent-size', type=list, default=10, metavar='N')
-parser.add_argument('--L', type=list, default=10, metavar='N')
+parser.add_argument('--input-h', type=int, default=28, metavar='N')
+parser.add_argument('--input-w', type=int, default=28, metavar='N')
+parser.add_argument('--hidden-size', type=int, default=400, metavar='N')
+parser.add_argument('--latent-size', type=int, default=10, metavar='N')
+parser.add_argument('--L', type=int, default=10, metavar='N')
 args = parser.parse_args()
 
 torch.manual_seed(args.seed)
