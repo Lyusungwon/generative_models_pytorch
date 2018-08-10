@@ -1,5 +1,5 @@
-# import sys
-# sys.path.append('../utils/')
+import sys
+sys.path.append('../utils/')
 import argparser
 import dataloader
 import model
