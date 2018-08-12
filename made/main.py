@@ -96,7 +96,7 @@ def test(epoch):
 
 def sample(epoch):
 	made.eval()
-	sample = torch.zeros(1, 1, args.input_h, args.input_w).to(device)
+	sample = torch.randn(1, 1, args.input_h, args.input_w).to(device)
 	mask = made.m[0]
 	for i in range(args.input_h * args.input_w):
 		nmask = (mask == i).float().to(device)
