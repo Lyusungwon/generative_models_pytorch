@@ -94,18 +94,28 @@ def test(epoch):
 	print('====> Test set loss: {:.4f}'.format(test_loss))
 	writer.add_scalar('Test loss', test_loss, epoch)
 
-for epoch in range(args.epochs):
-	if not args.sample:
-		train(epoch)
-		test(epoch)
-	sample = torch.zeros(1, args.input_h, args.input_w).to(device)
+def sample(epoch):
+	made.eval()
+	sample = torch.zeros(1, args.input_h * args.input_w).to(device)
+	mask = made.m[0]
 	for i in range(args.input_h * args.input_w):
-		sample = made(sample)
-	writer.add_image('Sample Image', sample, epoch)
+		imask = (mask <= i).float().to(device)
+		nmask = (mask == i + 1).float().to(device)
+		sample = (sample * imask).view(1, args.input_h * args.input_w)
+		output = made(sample)
+		sample += (output.view(1, -1) * nmask)
+	writer.add_image('Sample Image', sample.view(1, args.input_h * args.input_w), epoch)
 	# if not os.path.exists(log + 'results'):
 	# 	os.mkdir(log + 'results')
 	# save_image(output,
 	# 		   log + 'results/sample_' + str(epoch) + '.png')
+
+
+for epoch in range(args.epochs):
+	if not args.sample:
+		train(epoch)
+		test(epoch)
+	sample(epoch)
 if not args.sample:
 	torch.save(made.state_dict(), log + 'made.pt')
 	print('Model saved in ', log + 'made.pt')
