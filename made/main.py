@@ -102,6 +102,7 @@ def test(epoch):
 	writer.add_scalar('Test loss', test_loss, epoch)
 
 def sample(inputs):
+	n = len(inputs)
 	made.eval()
 	start_sample = 392
 	mask = made.m[0]
@@ -113,7 +114,7 @@ def sample(inputs):
 		samples = made(inputs)
 		# sample_add = torch.bernoulli(output.view(1, 1, args.input_h * args.input_w)* nmask).view(1, 1, args.input_h, args.input_w)
 		nmask = (mask == i).float().to(device)
-		sample_add = (samples.view(1, 1, args.input_h * args.input_w)* nmask).view(1, 1, args.input_h, args.input_w)
+		sample_add = (samples.view(n, 1, args.input_h * args.input_w)* nmask).view(n, 1, args.input_h, args.input_w)
 		outputs += sample_add
 		# writer.add_image('Sample Image', inputs, epoch)
 	return inputs, outputs
