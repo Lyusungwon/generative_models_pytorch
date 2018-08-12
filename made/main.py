@@ -100,8 +100,8 @@ for epoch in range(args.epochs):
 		test(epoch)
 	sample = torch.zeros(args.input_h, args.input_w).to(device)
 	for i in range(args.input_h * args.input_w):
-		writer.add_image('Sample Image', sample, epoch* args.input_h * args.input_w + i)
 		sample = made(sample)
+	writer.add_image('Sample Image', sample, epoch)
 	# if not os.path.exists(log + 'results'):
 	# 	os.mkdir(log + 'results')
 	# save_image(output,
