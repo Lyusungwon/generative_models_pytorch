@@ -101,9 +101,9 @@ def sample(epoch):
 	for i in range(args.input_h * args.input_w):
 		nmask = (mask == i + 1).float().to(device)
 		output = made(sample)
-		sample += (output.view(1, -1) * nmask).view(1, args.input_h * args.input_w)
+		sample += (output.view(1, args.input_h * args.input_w) * nmask).view(1, args.input_h, args.input_w)
 		print(output.size(), sample.size())
-	writer.add_image('Sample Image', sample.view(1, args.input_h * args.input_w), epoch)
+	writer.add_image('Sample Image', sample, epoch)
 	# if not os.path.exists(log + 'results'):
 	# 	os.mkdir(log + 'results')
 	# save_image(output,
