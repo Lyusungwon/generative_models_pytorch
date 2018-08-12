@@ -42,8 +42,7 @@ test_loader = dataloader.test_loader('mnist', args.data_directory, args.batch_si
 made = model.Made(args.input_h, args.input_w, args.hidden_size, args.layer_size, args.mask_num).to(device)
 if args.load_model != '000000000000':
 	made.load_state_dict(torch.load(args.log_directory + 'made/' + args.load_model + '/made.pt'))
-	args.time_stamep = args.load_model[:12]
-else:
+	args.time_stamp = args.load_model[:12]
 
 log = args.log_directory + 'made/' + args.time_stamp + config + '/'
 writer = SummaryWriter(log)
