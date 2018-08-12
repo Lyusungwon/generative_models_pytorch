@@ -96,14 +96,13 @@ def test(epoch):
 
 def sample(epoch):
 	made.eval()
-	sample = torch.zeros(1, args.input_h * args.input_w).to(device)
+	sample = torch.zeros(1, args.input_h, args.input_w).to(device)
 	mask = made.m[0]
 	for i in range(args.input_h * args.input_w):
-		imask = (mask <= i).float().to(device)
 		nmask = (mask == i + 1).float().to(device)
-		sample = (sample * imask).view(1, args.input_h * args.input_w)
 		output = made(sample)
-		sample += (output.view(1, -1) * nmask)
+		sample += (output.view(1, -1) * nmask).view(1, args.input_h * args.input_w)
+		print(output.size(), sample.size())
 	writer.add_image('Sample Image', sample.view(1, args.input_h * args.input_w), epoch)
 	# if not os.path.exists(log + 'results'):
 	# 	os.mkdir(log + 'results')
