@@ -39,11 +39,11 @@ print("Config:", config)
 train_loader = dataloader.train_loader('mnist', args.data_directory, args.batch_size)
 test_loader = dataloader.test_loader('mnist', args.data_directory, args.batch_size)
 
+made = model.Made(args.input_h, args.input_w, args.hidden_size, args.layer_size, args.mask_num).to(device)
 if args.load_model != '000000000000':
-	made = torch.load(args.log_directory + 'made/'  + args.load_model + '/made.pt').to(device)
+	made.load_state_dict(torch.load(args.log_directory + 'made/' + args.load_model + '/made.pt'))
 	args.time_stamep = args.load_model[:12]
 else:
-	made = model.Made(args.input_h, args.input_w, args.hidden_size, args.layer_size, args.mask_num).to(device)
 
 log = args.log_directory + 'made/' + args.time_stamp + config + '/'
 writer = SummaryWriter(log)
@@ -96,9 +96,9 @@ def test(epoch):
 	writer.add_scalar('Test loss', test_loss, epoch)
 
 for epoch in range(args.epochs):
-	if not args.test:
+	if not args.sample:
 		train(epoch)
-	test(epoch)
+		test(epoch)
 	sample = torch.zeros(args.input_h, args.input_w).to(device)
 	for i in range(args.input_h * args.input_w):
 		writer.add_image('Sample Image', sample, epoch* args.input_h * args.input_w + i)
@@ -107,7 +107,7 @@ for epoch in range(args.epochs):
 	# 	os.mkdir(log + 'results')
 	# save_image(output,
 	# 		   log + 'results/sample_' + str(epoch) + '.png')
-	if not args.test:
-		torch.save(made, log + 'made.pt')
-		print('Model saved in ', log + 'made.pt')
+if not args.sample:
+	torch.save(made.state_dict(), log + 'made.pt')
+	print('Model saved in ', log + 'made.pt')
 writer.close()
