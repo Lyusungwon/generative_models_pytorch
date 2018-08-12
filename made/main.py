@@ -107,7 +107,7 @@ def sample(inputs):
 	mask = made.m[0]
 	imask = (mask < start_sample).float().view(1, 1, args.input_h, args.input_w).to(device)
 	inputs = inputs * imask
-	outputs = inputs.copy()
+	outputs = inputs.clone()
 	# sample = torch.randn(1, 1, args.input_h, args.input_w).to(device)
 	for i in range(start_sample, args.input_h * args.input_w):
 		samples = made(inputs)
