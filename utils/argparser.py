@@ -28,5 +28,6 @@ def default_parser():
                         help='load previous model')
     parser.add_argument('--start-epoch', type=int, default=0, metavar='N',
                         help='start-epoch number')
+    parser.add_argument('--test', action='store_true', default=False)
 
     return parser
