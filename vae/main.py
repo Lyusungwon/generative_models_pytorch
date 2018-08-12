@@ -41,8 +41,8 @@ train_loader = dataloader.train_loader('mnist', args.data_directory, args.batch_
 test_loader = dataloader.test_loader('mnist', args.data_directory, args.batch_size)
 
 if args.load_model != '000000000000':
-	encoder = torch.load(args.log_directory  + '/' + args.load_model + '/vae_encoder.pt')
-	decoder = torch.load(args.log_directory  + '/' + args.load_model + '/vae_decoder.pt')
+	encoder = torch.load(args.log_directory + 'vae/' + args.load_model + '/vae_encoder.pt')
+	decoder = torch.load(args.log_directory + 'vae/' + args.load_model + '/vae_decoder.pt')
 	args.time_stamep = args.load_mode[:12]
 else:
 	encoder = model.Encoder(args.input_h, args.input_w, args.hidden_size, args.latent_size).to(device)
