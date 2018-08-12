@@ -89,22 +89,35 @@ def test(epoch):
 			n = min(batch_size, 8)
 			comparison = torch.cat([input_data[:n],
 								  recon[:n]])
+			if args.sample:
+				inputs, outputs = sample([input_data[:n]])
+				comparison = torch.cat([comparison,
+					  inputs, outputs])
+
 			writer.add_image('Reconstruction Image', comparison, epoch)
+
+			sample(epoch)
 	test_loss /= len(test_loader.dataset)
 	print('====> Test set loss: {:.4f}'.format(test_loss))
 	writer.add_scalar('Test loss', test_loss, epoch)
 
-def sample(epoch):
+def sample(inputs):
 	made.eval()
-	sample = torch.randn(1, 1, args.input_h, args.input_w).to(device)
+	start_sample = 392
 	mask = made.m[0]
-	for i in range(args.input_h * args.input_w):
+	imask = (mask < start_sample).view(1, 1, args.input_h, args.input_w)float().to(device)
+	inputs = inputs * imask
+	outputs = inputs.copy()
+	# sample = torch.randn(1, 1, args.input_h, args.input_w).to(device)
 		nmask = (mask == i).float().to(device)
-		output = made(sample)
+	for i in range(start_sample, args.input_h * args.input_w):
+		samples = made(inputs)
 		# sample_add = torch.bernoulli(output.view(1, 1, args.input_h * args.input_w)* nmask).view(1, 1, args.input_h, args.input_w)
-		sample_add = (output.view(1, 1, args.input_h * args.input_w)* nmask).view(1, 1, args.input_h, args.input_w)
-		sample += sample_add
-		writer.add_image('Sample Image', sample, epoch * args.input_h * args.input_w + i)
+		nmask = (mask == i).float().to(device)
+		sample_add = (samples.view(1, 1, args.input_h * args.input_w)* nmask).view(1, 1, args.input_h, args.input_w)
+		outputs += sample_add
+		# writer.add_image('Sample Image', inputs, epoch)
+	return inputs, outputs
 	# if not os.path.exists(log + 'results'):
 	# 	os.mkdir(log + 'results')
 	# save_image(output,
@@ -114,8 +127,8 @@ def sample(epoch):
 for epoch in range(args.epochs):
 	if not args.sample:
 		train(epoch)
-		test(epoch)
-	sample(epoch)
+	test(epoch)
+
 if not args.sample:
 	torch.save(made.state_dict(), log + 'made.pt')
 	print('Model saved in ', log + 'made.pt')
