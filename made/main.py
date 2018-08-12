@@ -5,6 +5,7 @@ import dataloader
 import model
 import time
 import os
+import gc
 import torch
 import torch.optim as optim
 import torch.nn.functional as F
@@ -103,6 +104,7 @@ def sample(epoch):
 		output = made(sample)
 		sample += (output.view(1, 1, args.input_h * args.input_w) * nmask).view(1, 1, args.input_h, args.input_w)
 		print(i, output.size(), sample.size())
+		gc.collect()
 	writer.add_image('Sample Image', sample, epoch)
 	# if not os.path.exists(log + 'results'):
 	# 	os.mkdir(log + 'results')
