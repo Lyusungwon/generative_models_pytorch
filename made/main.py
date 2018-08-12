@@ -98,7 +98,7 @@ for epoch in range(args.epochs):
 	if not args.sample:
 		train(epoch)
 		test(epoch)
-	sample = torch.zeros(args.input_h, args.input_w).to(device)
+	sample = torch.zeros(1, args.input_h, args.input_w).to(device)
 	for i in range(args.input_h * args.input_w):
 		sample = made(sample)
 	writer.add_image('Sample Image', sample, epoch)
