@@ -103,7 +103,7 @@ def sample(epoch):
 		output = made(sample)
 		sample_add = torch.bernoulli(output.view(1, 1, args.input_h * args.input_w)* nmask).view(1, 1, args.input_h, args.input_w)
 		sample += sample_add
-	writer.add_image('Sample Image', sample, epoch)
+		writer.add_image('Sample Image', sample, epoch * args.input_h * args.input_w + i)
 	# if not os.path.exists(log + 'results'):
 	# 	os.mkdir(log + 'results')
 	# save_image(output,
