@@ -40,8 +40,8 @@ train_loader = dataloader.train_loader('mnist', args.data_directory, args.batch_
 test_loader = dataloader.test_loader('mnist', args.data_directory, args.batch_size)
 
 if args.load_model != '000000000000':
-	made = torch.load(args.log_directory  + '/' + args.load_model + '/made.pt')
-	args.time_stamep = args.load_mode[:12]
+	made = torch.load(args.log_directory + 'made/'  + args.load_model + '/made.pt')
+	args.time_stamep = args.load_model[:12]
 else:
 	made = model.Made(args.input_h, args.input_w, args.hidden_size, args.layer_size, args.mask_num).to(device)
 
@@ -96,16 +96,18 @@ def test(epoch):
 	writer.add_scalar('Test loss', test_loss, epoch)
 
 for epoch in range(args.epochs):
-	train(epoch)
+	if not args.test:
+		train(epoch)
 	test(epoch)
-	# sample = D.Normal(torch.zeros(10).to(device), torch.ones(10).to(device))
-	# sample_t, log_abs_det_jacobian = nflow(sample.sample(torch.Size([64])))
-	# output = decoder(sample_t)
+	sample = torch.zeros(args.input_h, args.input_w).to(device)
+	for i in range(args.input_h * args.input_w):
+		writer.add_image('Sample Image', sample, epoch* args.input_h * args.input_w + i)
+		sample = made(sample)
 	# if not os.path.exists(log + 'results'):
 	# 	os.mkdir(log + 'results')
 	# save_image(output,
 	# 		   log + 'results/sample_' + str(epoch) + '.png')
-	# writer.add_image('Sample Image', output, epoch)
-	torch.save(made, log + 'made.pt')
-	print('Model saved in ', log + 'made.pt')
+	if not args.test:
+		torch.save(made, log + 'made.pt')
+		print('Model saved in ', log + 'made.pt')
 writer.close()
