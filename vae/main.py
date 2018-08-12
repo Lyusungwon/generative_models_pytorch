@@ -43,7 +43,7 @@ test_loader = dataloader.test_loader('mnist', args.data_directory, args.batch_si
 if args.load_model != '000000000000':
 	encoder = torch.load(args.log_directory + 'vae/' + args.load_model + '/vae_encoder.pt')
 	decoder = torch.load(args.log_directory + 'vae/' + args.load_model + '/vae_decoder.pt')
-	args.time_stamep = args.load_mode[:12]
+	args.time_stamep = args.load_model[:12]
 else:
 	encoder = model.Encoder(args.input_h, args.input_w, args.hidden_size, args.latent_size).to(device)
 	decoder = model.Decoder(args.input_h, args.input_w, args.hidden_size, args.latent_size).to(device)
@@ -122,7 +122,8 @@ def test(epoch):
 
 for epoch in range(args.epochs):
 	batch = 0
-	train(epoch)
+	if not args.test:
+		train(epoch)
 	test(epoch)
 	sample = D.Normal(torch.zeros(args.latent_size).to(device), torch.ones(args.latent_size).to(device))
 	output = decoder(sample.sample(torch.Size([64])))
@@ -132,8 +133,9 @@ for epoch in range(args.epochs):
 			   log + 'results/sample_' + str(epoch) + '.png')
 	writer.add_image('Sample Image', output, epoch)
 
-torch.save(encoder, log + 'vae_encoder.pt')
-torch.save(decoder, log + 'vae_decoder.pt')
-print('Model saved in ', log + 'vae_encoder.pt')
-print('Model saved in ', log + 'vae_decoder.pt')
+if not args.test:
+	torch.save(encoder, log + 'vae_encoder.pt')
+	torch.save(decoder, log + 'vae_decoder.pt')
+	print('Model saved in ', log + 'vae_encoder.pt')
+	print('Model saved in ', log + 'vae_decoder.pt')
 writer.close()
