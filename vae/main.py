@@ -40,13 +40,12 @@ print("Config:", config)
 train_loader = dataloader.train_loader('mnist', args.data_directory, args.batch_size)
 test_loader = dataloader.test_loader('mnist', args.data_directory, args.batch_size)
 
+encoder = model.Encoder(args.input_h, args.input_w, args.hidden_size, args.latent_size).to(device)
+decoder = model.Decoder(args.input_h, args.input_w, args.hidden_size, args.latent_size).to(device)
 if args.load_model != '000000000000':
-	encoder = torch.load(args.log_directory + 'vae/' + args.load_model + '/vae_encoder.pt')
-	decoder = torch.load(args.log_directory + 'vae/' + args.load_model + '/vae_decoder.pt')
+	encoder.load_state_dict(torch.load(args.log_directory + 'vae/' + args.load_model + '/vae_encoder.pt'))
+	decoder.load_state_dict(torch.load(args.log_directory + 'vae/' + args.load_model + '/vae_decoder.pt'))
 	args.time_stamep = args.load_model[:12]
-else:
-	encoder = model.Encoder(args.input_h, args.input_w, args.hidden_size, args.latent_size).to(device)
-	decoder = model.Decoder(args.input_h, args.input_w, args.hidden_size, args.latent_size).to(device)
 
 log = args.log_directory + 'vae/' + args.time_stamp + config + '/'
 writer = SummaryWriter(log)
@@ -122,9 +121,9 @@ def test(epoch):
 
 for epoch in range(args.epochs):
 	batch = 0
-	if not args.test:
+	if not args.sample:
 		train(epoch)
-	test(epoch)
+		test(epoch)
 	sample = D.Normal(torch.zeros(args.latent_size).to(device), torch.ones(args.latent_size).to(device))
 	output = decoder(sample.sample(torch.Size([64])))
 	if not os.path.exists(log + 'results'):
@@ -133,9 +132,9 @@ for epoch in range(args.epochs):
 			   log + 'results/sample_' + str(epoch) + '.png')
 	writer.add_image('Sample Image', output, epoch)
 
-if not args.test:
-	torch.save(encoder, log + 'vae_encoder.pt')
-	torch.save(decoder, log + 'vae_decoder.pt')
+if not args.sample:
+	torch.save(encoder.state_dict(), log + 'vae_encoder.pt')
+	torch.save(decoder.state_dict(), log + 'vae_decoder.pt')
 	print('Model saved in ', log + 'vae_encoder.pt')
 	print('Model saved in ', log + 'vae_decoder.pt')
 writer.close()
