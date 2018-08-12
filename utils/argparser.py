@@ -10,9 +10,9 @@ def default_parser():
                         help='number of epochs to train (default: 10)')
     parser.add_argument('--lr', type=float, default=1e-4, metavar='N',
                         help='learning rate (default: 1e-4)')
-    parser.add_argument('--data-directory', type=str, default='/home/sungwonlyu/data/', metavar='N',
+    parser.add_argument('--data-directory', type=str, default='/home/sungwon/data/', metavar='N',
                         help='directory of data')
-    parser.add_argument('--log-directory', type=str, default='/home/sungwonlyu/experiment/', metavar='N',
+    parser.add_argument('--log-directory', type=str, default='/home/sungwon/experiment/', metavar='N',
                         help='log directory')
     parser.add_argument('--device', type=int, default=0, metavar='N',
                         help='number of cuda')
