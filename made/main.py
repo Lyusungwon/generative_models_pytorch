@@ -90,7 +90,7 @@ def test(epoch):
 			comparison = torch.cat([input_data[:n],
 								  recon[:n]])
 			if args.sample:
-				inputs, outputs = sample([input_data[:n]])
+				inputs, outputs = sample(input_data[:n])
 				comparison = torch.cat([comparison,
 					  inputs, outputs])
 
@@ -105,7 +105,7 @@ def sample(inputs):
 	made.eval()
 	start_sample = 392
 	mask = made.m[0]
-	imask = (mask < start_sample).view(1, 1, args.input_h, args.input_w).float().to(device)
+	imask = (mask < start_sample).float().view(1, 1, args.input_h, args.input_w).to(device)
 	inputs = inputs * imask
 	outputs = inputs.copy()
 	# sample = torch.randn(1, 1, args.input_h, args.input_w).to(device)
