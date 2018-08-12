@@ -40,7 +40,7 @@ train_loader = dataloader.train_loader('mnist', args.data_directory, args.batch_
 test_loader = dataloader.test_loader('mnist', args.data_directory, args.batch_size)
 
 if args.load_model != '000000000000':
-	made = torch.load(args.log_directory + 'made/'  + args.load_model + '/made.pt')
+	made = torch.load(args.log_directory + 'made/'  + args.load_model + '/made.pt').to(device)
 	args.time_stamep = args.load_model[:12]
 else:
 	made = model.Made(args.input_h, args.input_w, args.hidden_size, args.layer_size, args.mask_num).to(device)
