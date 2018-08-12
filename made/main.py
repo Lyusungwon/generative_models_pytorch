@@ -105,7 +105,7 @@ def sample(inputs):
 	made.eval()
 	start_sample = 392
 	mask = made.m[0]
-	imask = (mask < start_sample).view(1, 1, args.input_h, args.input_w)float().to(device)
+	imask = (mask < start_sample).view(1, 1, args.input_h, args.input_w).float().to(device)
 	inputs = inputs * imask
 	outputs = inputs.copy()
 	# sample = torch.randn(1, 1, args.input_h, args.input_w).to(device)
