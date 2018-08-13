@@ -31,10 +31,10 @@ else:
 
 config_list = [args.epochs, args.batch_size, args.lr, 
 				args.input_h, args.input_w, 
-				args.hidden_size, args.layer_size, args.mask_num,
-				args.start_sample]
+				args.hidden_size, args.layer_size, args.mask_num]
 if args.sample:
 	config_list.append('sample')
+	config_list.append(args.start_sample)
 config = ""
 for i in map(str, config_list):
 	config = config + '_' + i
