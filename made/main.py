@@ -18,6 +18,7 @@ parser.add_argument('--input-w', type=int, default=28, metavar='N')
 parser.add_argument('--hidden-size', type=int, default=8000, metavar='N')
 parser.add_argument('--layer-size', type=int, default=2, metavar='N')
 parser.add_argument('--mask-num', type=int, default=32, metavar='N')
+parser.add_argument('--start-sample', type=int, default=394, metavar='N')
 args = parser.parse_args()
 
 torch.manual_seed(args.seed)
@@ -30,7 +31,10 @@ else:
 
 config_list = [args.epochs, args.batch_size, args.lr, 
 				args.input_h, args.input_w, 
-				args.hidden_size, args.layer_size]
+				args.hidden_size, args.layer_size, args.mask_num,
+				args.start_sample]
+if args.sample:
+	config_list.append('sample')
 config = ""
 for i in map(str, config_list):
 	config = config + '_' + i
@@ -95,26 +99,22 @@ def test(epoch):
 					  inputs, outputs])
 
 			writer.add_image('Reconstruction Image', comparison, epoch)
-
-			sample(epoch)
 	test_loss /= len(test_loader.dataset)
 	print('====> Test set loss: {:.4f}'.format(test_loss))
 	writer.add_scalar('Test loss', test_loss, epoch)
 
 def sample(inputs):
-	n = len(inputs)
 	made.eval()
-	start_sample = 392
 	mask = made.m[0]
-	imask = (mask < start_sample).float().view(1, 1, args.input_h, args.input_w).to(device)
+	imask = (mask < args.start_sample).float().view(1, 1, args.input_h, args.input_w).to(device)
 	inputs = inputs * imask
 	outputs = inputs.clone()
 	# sample = torch.randn(1, 1, args.input_h, args.input_w).to(device)
-	for i in range(start_sample, args.input_h * args.input_w):
+	for i in range(args.start_sample, args.input_h * args.input_w):
 		samples = made(inputs)
 		# sample_add = torch.bernoulli(output.view(1, 1, args.input_h * args.input_w)* nmask).view(1, 1, args.input_h, args.input_w)
 		nmask = (mask == i).float().to(device)
-		sample_add = (samples.view(n, 1, args.input_h * args.input_w)* nmask).view(n, 1, args.input_h, args.input_w)
+		sample_add = (samples.view(len(inputs), 1, args.input_h * args.input_w)* nmask).view(len(inputs), 1, args.input_h, args.input_w)
 		outputs += sample_add
 		# writer.add_image('Sample Image', inputs, epoch)
 	return inputs, outputs
