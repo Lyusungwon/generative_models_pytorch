@@ -17,7 +17,7 @@ parser.add_argument('--input-h', type=int, default=28, metavar='N')
 parser.add_argument('--input-w', type=int, default=28, metavar='N')
 parser.add_argument('--hidden-size', type=int, default=400, metavar='N')
 parser.add_argument('--latent-size', type=int, default=10, metavar='N')
-parser.add_argument('--m', type=float, default=110, metavar='N')
+parser.add_argument('--m', type=float, default=25, metavar='N')
 parser.add_argument('--alpha', type=float, default=0.5, metavar='N')
 parser.add_argument('--beta', type=float, default=0.5, metavar='N')
 args = parser.parse_args()
@@ -76,14 +76,14 @@ def train(epoch):
 		encoder_optimizer.zero_grad()
 		z_ = encoder(input_data)
 		q_z = D.Normal(z_[:, 0], (z_[:, 1]/ 2).exp())
-		z = q_z.sample().to(device)
+		z = q_z.rsample().to(device)
 		# epsilon = prior.sample().to(device)
 		# z = z_mu + epsilon * (z_logvar / 2).exp()
 
 		output_data = decoder(z)
-		reconstruction_loss = F.binary_cross_entropy(output_data, input_data, size_average=False)
+		reconstruction_loss = F.mse_loss(output_data, input_data, size_average=False) / 2
 
-		fake_z = prior.sample().to(device)
+		fake_z = prior.rsample().to(device)
 		fake_data = decoder(fake_z)
 
 		z_r_ = encoder(output_data.detach())
@@ -112,9 +112,9 @@ def train(epoch):
 
 		z_r_kld = D.kl_divergence(q_z_r, prior).sum()
 		z_pp_kld = D.kl_divergence(q_z_pp, prior).sum()
-		generator_loss = args.alpha * (z_r_kld + z_pp_kld)
+		generator_loss =  z_r_kld + z_pp_kld
 
-		decoder_loss = generator_loss + args.beta * reconstruction_loss
+		decoder_loss = args.alpha *generator_loss + args.beta * reconstruction_loss
 		decoder_loss.backward()
 		decoder_optimizer.step()
 
@@ -155,10 +155,10 @@ def test(epoch):
 		input_data = input_data.to(device)
 		z_ = encoder(input_data)
 		q_z = D.Normal(z_[:, 0], (z_[:, 1]/ 2).exp())
-		z = q_z.sample().to(device)
+		z = q_z.rsample().to(device)
 		output_data = decoder(z)
-		reconstruction_loss = F.binary_cross_entropy(output_data, input_data, size_average=False)
-		fake_z = prior.sample().to(device)
+		reconstruction_loss = F.mse_loss(output_data, input_data, size_average=False) / 2
+		fake_z = prior.rsample().to(device)
 		fake_data = decoder(fake_z)
 		z_r_ = encoder(output_data.detach())
 		q_z_r = D.Normal(z_r_[:, 0], (z_r_[:, 1]/ 2).exp())
@@ -176,8 +176,8 @@ def test(epoch):
 		q_z_pp = D.Normal(z_pp_[:, 0], (z_pp_[:, 1]/ 2).exp())
 		z_r_kld = D.kl_divergence(q_z_r, prior).sum()
 		z_pp_kld = D.kl_divergence(q_z_pp, prior).sum()
-		generator_loss = args.alpha * (z_r_kld + z_pp_kld)
-		decoder_loss = generator_loss + args.beta * reconstruction_loss
+		generator_loss =  z_r_kld + z_pp_kld
+		decoder_loss = args.alpha * generator_loss + args.beta * reconstruction_loss
 
 		loss = encoder_loss + decoder_loss
 
