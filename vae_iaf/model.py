@@ -101,8 +101,6 @@ class Made(nn.Module):
             sl.set_mask(mask)
 
     def forward(self, x, h):
-        x = x.view(-1, self.latent_size)
-        h = h.view(-1, self.h)
         print(x.size(), h.size())
         x = torch.cat([x, h], 1)
         m = self.s_net(x)
