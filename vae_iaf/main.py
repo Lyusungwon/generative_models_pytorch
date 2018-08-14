@@ -151,7 +151,7 @@ def test(epoch):
 def sample(epoch):
 	sample_d = D.Normal(torch.zeros(args.latent_size + args.h).to(device), torch.ones(args.latent_size + args.h).to(device))
 	sample = sample_d.sample(torch.Size([64]))
-	sample_t, log_det = iaf(sample[:, h:], sample[:, :h])
+	sample_t, log_det = iaf(sample[:, args.h:], sample[:, :args.h])
 	output = decoder(sample_t)
 	writer.add_image('Sample Image', output, epoch)
 
