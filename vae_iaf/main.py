@@ -121,12 +121,12 @@ def test(epoch):
 		batch_size = input_data.size()[0]
 		prior = D.Normal(torch.zeros(batch_size, args.latent_size).to(device), torch.ones(batch_size, args.latent_size).to(device))
 		input_data = binarize(input_data).to(device)
-		z_params = encoder(input_data)
+		z_params, h = encoder(input_data)
 		z_mu = z_params[:, 0]
 		z_logvar = z_params[:, 1]
 		q = D.Normal(z_mu, (z_logvar/ 2).exp())
 		z = q.rsample().to(device)
-		zs, log_det = iaf(z)
+		zs, log_det = iaf(z, h)
 		output_data = decoder(zs)
 		reconstruction_loss = F.binary_cross_entropy(output_data, input_data.detach(), size_average=False)
 		kld_loss = D.kl_divergence(q, prior).sum()
@@ -149,8 +149,9 @@ def test(epoch):
 
 
 def sample(epoch):
-	sample = D.Normal(torch.zeros(args.latent_size).to(device), torch.ones(args.latent_size).to(device))
-	sample_t, log_det = iaf(sample.sample(torch.Size([64])))
+	sample_d = D.Normal(torch.zeros(args.latent_size + args.h).to(device), torch.ones(args.latent_size + args.h).to(device))
+	sample = sample_d.sample(torch.Size([64]))
+	sample_t, log_det = iaf(sample[:, h:], sample[:, :h])
 	output = decoder(sample_t)
 	writer.add_image('Sample Image', output, epoch)
 
