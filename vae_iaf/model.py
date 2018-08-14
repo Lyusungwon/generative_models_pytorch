@@ -66,7 +66,6 @@ class Made(nn.Module):
         self.hidden_size = hidden_size
         self.h = h
         # self.mask_num = mask_num
-        self.m = torch.Tensor([i for i in range(self.latent_size)])
         # self.m = {}
         # for i in range(self.mask_num):
         #     self.m[i] = torch.randperm(self.input_h * self.input_w)
@@ -89,11 +88,12 @@ class Made(nn.Module):
 
     def set_masks(self):
         m = {}
-        m[0] = self.m
+        m[0] = torch.Tensor([i for i in range(self.latent_size + self.h)])
+        ml = torch.Tensor([i for i in range(self.latent_size)])
         for l in range(1, self.layer_num +1):
             m[l] = torch.randint(m[l-1].min().int().item(), self.latent_size - 1, size = (self.hidden_size,))
         self.mask = [m[l-1][:, None].long() <= m[l][None, :].long() for l in range(1, self.layer_num + 1)]
-        self.mask.append(m[self.layer_num][:, None].long() < m[0][None, :].long())
+        self.mask.append(m[self.layer_num][:, None].long() < ml[None, :].long())
         m_layers = [l for l in self.m_net.modules() if isinstance(l, MadeLayer)]
         s_layers = [l for l in self.s_net.modules() if isinstance(l, MadeLayer)]
         for ml, sl, mask in zip(m_layers, s_layers, self.mask):
