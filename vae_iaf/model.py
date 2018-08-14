@@ -19,8 +19,8 @@ class Encoder(nn.Module):
     def forward(self, x):
         x = x.view(-1, self.input_h * self.input_w)
         x = self.encoder(x)
-        x = x[:, self.h:].view(-1, 2, self.latent_size)
         h = x[:, :self.h]
+        x = x[:, self.h:].view(-1, 2, self.latent_size)
         return x, h
 
 class Decoder(nn.Module):
@@ -101,7 +101,6 @@ class Made(nn.Module):
             sl.set_mask(mask)
 
     def forward(self, x, h):
-        print(x.size(), h.size())
         x = torch.cat([x, h], 1)
         m = self.s_net(x)
         s = self.m_net(x)
