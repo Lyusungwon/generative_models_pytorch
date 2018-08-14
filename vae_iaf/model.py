@@ -101,12 +101,12 @@ class Made(nn.Module):
             sl.set_mask(mask)
 
     def forward(self, x, h):
-        x = torch.cat([x, h], 1)
-        m = self.s_net(x)
-        s = self.m_net(x)
-        z = x * s.exp() + m
+        z = torch.cat([x, h], 1)
+        m = self.s_net(z)
+        s = self.m_net(z)
+        next_z = x * s.exp() + m
         log_det = s.sum(1)
-        return z, log_det
+        return next_z, log_det
 
 class MadeLayer(nn.Module):
     def __init__(self, input_l, output_l):
