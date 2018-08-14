@@ -48,7 +48,8 @@ class IAF(nn.Module):
         self.latent_size = latent_size
         self.layer_num = layer_num
         self.hidden_size = hidden_size
-        self.iaf = nn.ModuleList([Made(self.latent_size, self.layer_num, self.hidden_size) for i in range(self.T)])
+        self.h = h
+        self.iaf = nn.ModuleList([Made(self.latent_size, self.layer_num, self.hidden_size, self.h) for i in range(self.T)])
 
     def forward(self, x, h):
         log_det_sum = 0
@@ -58,11 +59,12 @@ class IAF(nn.Module):
         return x, log_det_sum
 
 class Made(nn.Module):
-    def __init__(self, latent_size, layer_num, hidden_size = 100):
+    def __init__(self, latent_size, layer_num, hidden_size, h):
         super(Made, self).__init__()
         self.latent_size = latent_size
         self.layer_num = layer_num
         self.hidden_size = hidden_size
+        self.h = h
         # self.mask_num = mask_num
         self.m = torch.Tensor([i for i in range(self.latent_size)])
         # self.m = {}
