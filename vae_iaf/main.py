@@ -142,10 +142,10 @@ def test(epoch):
 			writer.add_image('Reconstruction Image', comparison, epoch)
 	test_loss /= len(test_loader.dataset)
 	print('====> Test set loss: {:.4f}'.format(test_loss))
-	writer.add_scalars('Test loss', {'Reconstruction loss': r_loss / len(train_loader.dataset),
-											'KL divergence': k_loss / len(train_loader.dataset),
-											'Determinant': - d_loss / len(train_loader.dataset),
-											'Test loss': train_loss / len(train_loader.dataset)}, epoch)
+	writer.add_scalars('Test loss', {'Reconstruction loss': r_loss / len(test_loader.dataset),
+											'KL divergence': k_loss / len(test_loader.dataset),
+											'Determinant': - d_loss / len(test_loader.dataset),
+											'Test loss': test_loss / len(test_loader.dataset)}, epoch)
 
 
 def sample(epoch):
