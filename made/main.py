@@ -108,9 +108,9 @@ def test(epoch):
 
 def sample(inputs):
 	made.eval()
-	mask = made.m[0]
-	imask = (mask < args.start_sample).float().view(1, 1, args.input_h, args.input_w).to(device)
-	inputs = inputs * imask
+	order = made.order[0]
+	mask = (order < args.start_sample).float().view(1, 1, args.input_h, args.input_w).to(device)
+	inputs = inputs * mask
 	outputs = inputs.clone()
 	# sample = torch.randn(1, 1, args.input_h, args.input_w).to(device)
 	for i in range(args.start_sample, args.input_h * args.input_w):
