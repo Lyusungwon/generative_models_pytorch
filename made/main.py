@@ -107,9 +107,10 @@ def test(epoch):
 	writer.add_scalar('Test loss', test_loss, epoch)
 
 def sample(inputs):
+	batch_size = inputs.size()[0]
 	made.eval()
 	order = made.order[0]
-	mask = (order < args.start_sample).float().view(1, 1, args.input_h, args.input_w).to(device)
+	mask = (order < args.start_sample).float().view(1, 1, args.input_h, args.input_w).repeat(8,1,1,1).to(device)
 	inputs = inputs * mask
 	outputs = inputs.clone()
 	# sample = torch.randn(1, 1, args.input_h, args.input_w).to(device)
