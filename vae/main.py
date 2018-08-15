@@ -13,11 +13,12 @@ from torchvision.utils import save_image
 from tensorboardX import SummaryWriter
 
 parser = argparser.default_parser()
+parser.add_argument('--name', type=str, default='vae_nf', metavar='N')
 parser.add_argument('--input-h', type=int, default=28, metavar='N')
 parser.add_argument('--input-w', type=int, default=28, metavar='N')
 parser.add_argument('--hidden-size', type=int, default=400, metavar='N')
 parser.add_argument('--latent-size', type=int, default=10, metavar='N')
-parser.add_argument('--L', type=int, default=10, metavar='N')
+parser.add_argument('--L', type=int, default=1, metavar='N')
 args = parser.parse_args()
 
 torch.manual_seed(args.seed)
@@ -28,10 +29,12 @@ else:
 	device = torch.device('cuda:{}'.format(args.device))
 	torch.cuda.set_device(args.device)
 
-config_list = [args.epochs, args.batch_size, args.lr, 
+config_list = [args.name, args.epochs, args.batch_size, args.lr, 
 				args.input_h, args.input_w, 
 				args.hidden_size, args.latent_size,
-				args.L, args.device]
+				args.L]
+if args.sample:
+	config_list.append('sample')
 config = ""
 for i in map(str, config_list):
 	config = config + '_' + i
@@ -43,11 +46,11 @@ test_loader = dataloader.test_loader('mnist', args.data_directory, args.batch_si
 encoder = model.Encoder(args.input_h, args.input_w, args.hidden_size, args.latent_size).to(device)
 decoder = model.Decoder(args.input_h, args.input_w, args.hidden_size, args.latent_size).to(device)
 if args.load_model != '000000000000':
-	encoder.load_state_dict(torch.load(args.log_directory + 'vae/' + args.load_model + '/vae_encoder.pt'))
-	decoder.load_state_dict(torch.load(args.log_directory + 'vae/' + args.load_model + '/vae_decoder.pt'))
+    encoder.load_state_dict(torch.load(args.log_directory + '/' + args.load_model+ '/{}_encoder.pt'.format(args.name)))
+    decoder.load_state_dict(torch.load(args.log_directory + '/' + args.load_model + '/{}_decoder.pt'.format(args.name)))
 	args.time_stamep = args.load_model[:12]
 
-log = args.log_directory + 'vae/' + args.time_stamp + config + '/'
+log = args.log_directory + args.name + '/' + args.time_stamp + config + '/'
 writer = SummaryWriter(log)
 
 optimizer = optim.Adam(list(encoder.parameters())+list(decoder.parameters()), lr = args.lr)
@@ -96,6 +99,8 @@ def train(epoch):
 def test(epoch):
 	encoder.eval()
 	decoder.eval()
+	r_loss= 0
+	k_loss = 0
 	test_loss = 0
 	for i, (input_data, label) in enumerate(test_loader):
 		batch_size = input_data.size()[0]
@@ -108,6 +113,8 @@ def test(epoch):
 		reconstruction_loss = F.binary_cross_entropy(output_data, input_data, size_average=False)
 		q = D.Normal(z_mu, (z_logvar/ 2).exp())
 		kld_loss = D.kl_divergence(q, prior).sum()
+		r_loss += reconstruction_loss.item() 
+		k_loss += kld_loss.item()
 		loss = reconstruction_loss + kld_loss
 		test_loss += loss.item()
 		if i == 0:
@@ -115,26 +122,25 @@ def test(epoch):
 			comparison = torch.cat([input_data[:n],
 								  output_data[:n]])
 			writer.add_image('Reconstruction Image', comparison, epoch)
-	test_loss /= len(test_loader.dataset)
-	print('====> Test set loss: {:.4f}'.format(test_loss))
-	writer.add_scalar('Test loss', test_loss, epoch)
+	print('====> Test set loss: {:.4f}'.format(test_loss / len(test_loader.dataset)))
+	writer.add_scalars('Test loss', {'Reconstruction loss': r_loss / len(test_loader.dataset),
+											'KL divergence': k_loss / len(test_loader.dataset),
+											'Test loss': test_loss / len(test_loader.dataset)}, epoch)
+
+def sample(epoch):
+	sample = D.Normal(torch.zeros(args.latent_size).to(device), torch.ones(args.latent_size).to(device))
+	output = decoder(sample.sample(torch.Size([64])))
+	writer.add_image('Sample Image', output, epoch)
 
 for epoch in range(args.epochs):
-	batch = 0
 	if not args.sample:
 		train(epoch)
 		test(epoch)
-	sample = D.Normal(torch.zeros(args.latent_size).to(device), torch.ones(args.latent_size).to(device))
-	output = decoder(sample.sample(torch.Size([64])))
-	if not os.path.exists(log + 'results'):
-		os.mkdir(log + 'results')
-	save_image(output,
-			   log + 'results/sample_' + str(epoch) + '.png')
-	writer.add_image('Sample Image', output, epoch)
+	sample(epoch)
 
 if not args.sample:
-	torch.save(encoder.state_dict(), log + 'vae_encoder.pt')
-	torch.save(decoder.state_dict(), log + 'vae_decoder.pt')
-	print('Model saved in ', log + 'vae_encoder.pt')
-	print('Model saved in ', log + 'vae_decoder.pt')
+    torch.save(encoder.state_dict(), log + + '{}_encoder.pt'.format(args.name))
+    torch.save(decoder.state_dict(), log + '{}_decoder.pt'.format(args.name))
+    print('Model saved in ', log + '{}_encoder.pt'.format(args.name))
+    print('Model saved in ', log + '{}_decoder.pt'.format(args.name))
 writer.close()
