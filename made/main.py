@@ -119,9 +119,7 @@ def sample(inputs):
 		# sample_add = torch.bernoulli(output.view(1, 1, args.input_h * args.input_w)* nmask).view(1, 1, args.input_h, args.input_w)
 		nmask = (mask == i).float().to(device)
 		# sample_add = torch.bernoulli(samples.view(len(inputs), 1, args.input_h * args.input_w)* nmask).view(len(inputs), 1, args.input_h, args.input_w)
-		print(samples.size())
-		print(nmask.size())
-		sample_add = samples.view(batch_size, 1, args.input_h * args.input_w)* nmask
+		sample_add = samples.view(batch_size, 1, args.input_h, args.input_w)* nmask
 		outputs += sample_add
 		# writer.add_image('Sample Image', inputs, epoch)
 	return inputs, outputs
