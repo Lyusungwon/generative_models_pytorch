@@ -10,15 +10,11 @@ class Encoder(nn.Module):
         self.filter_num = filter_num
         self.latent_size = latent_size
         self.conv = nn.Sequential(
-            nn.Conv2d(self.channel_size, self.filter_num, 3, 1),
-            nn.Conv2d(self.filter_num, self.filter_num, 3, 1),
-            nn.Conv2d(self.filter_num, self.filter_num, 3, 1),
-            nn.Conv2d(self.filter_num, self.filter_num*2, 3, 1),
+            nn.Conv2d(self.channel_size, self.filter_num, 4, 1),
             nn.ReLU(inplace=True),
-            nn.MaxPool2d(2),
-            nn.Conv2d(self.filter_num*2, self.filter_num*2, 3, 1),
-            nn.Conv2d(self.filter_num*2, self.filter_num*2, 3, 1),
-            nn.Conv2d(self.filter_num*2, 2, 3, 1)
+            nn.Conv2d(self.filter_num, self.filter_num * 2, 4, 2),
+            nn.ReLU(inplace=True),
+            nn.Conv2d(self.filter_num * 2, 2, 4, 2)
             )
 
     def forward(self, x):
@@ -36,14 +32,13 @@ class Decoder(nn.Module):
         self.filter_num = filter_num
         self.latent_size = latent_size
         self.convt = nn.Sequential(
-            nn.ConvTranspose2d(1, self.filter_num*2, 3, 1),
-            nn.ConvTranspose2d(self.filter_num*2, self.filter_num*2, 3, 1),
-            nn.ConvTranspose2d(self.filter_num*2, self.filter_num*2, 3, 1),
-            nn.ConvTranspose2d(self.filter_num*2, self.filter_num*2, 3, 1),
-            nn.ConvTranspose2d(self.filter_num*2, self.filter_num, 5, 1),
-            nn.ConvTranspose2d(self.filter_num, self.filter_num, 5, 1),
-            nn.ConvTranspose2d(self.filter_num, self.filter_num, 5, 1),
-            nn.ConvTranspose2d(self.filter_num, 1, 5, 1),
+            nn.ConvTranspose2d(1, self.filter_num * 4, 4, 1),
+            nn.ReLU(inplace=True),
+            nn.ConvTranspose2d(self.filter_num * 4, self.filter_num * 2, 4, 1),
+            nn.ReLU(inplace=True),
+            nn.ConvTranspose2d(self.filter_num * 2, self.filter_num, 4, 1),
+            nn.ReLU(inplace=True),
+            nn.ConvTranspose2d(self.filter_num, 1, 4, 2),
             nn.Sigmoid()
             )
 

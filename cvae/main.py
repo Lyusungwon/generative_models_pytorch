@@ -102,7 +102,7 @@ def test(epoch):
 	r_loss= 0
 	k_loss = 0
 	test_loss = 0
-	for i, (input_data, label) in enumerate(test_loader):
+	for batch_idx, (input_data, label) in enumerate(test_loader):
 		batch_size = input_data.size()[0]
 		prior = D.Normal(torch.zeros(batch_size, args.latent_size).to(device), torch.ones(batch_size, args.latent_size).to(device))
 		input_data = input_data.to(device)
@@ -117,12 +117,11 @@ def test(epoch):
 		k_loss += kld_loss.item()
 		loss = reconstruction_loss + kld_loss
 		test_loss += loss.item()
-		if i == 0:
+		if batch_idx == 0:
 			n = min(batch_size, 8)
 			comparison = torch.cat([input_data[:n],
 								  output_data[:n]])
 			writer.add_image('Reconstruction Image', comparison, epoch)
-	test_loss /= len(test_loader.dataset)
 	print('====> Test set loss: {:.4f}'.format(test_loss))
 	writer.add_scalars('Test loss', {'Reconstruction loss': r_loss / len(test_loader.dataset),
 											'KL divergence': k_loss / len(test_loader.dataset),
