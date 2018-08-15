@@ -18,7 +18,7 @@ parser.add_argument('--input-w', type=int, default=28, metavar='N')
 parser.add_argument('--channel-size', type=int, default=1, metavar='N')
 parser.add_argument('--filter-num', type=int, default=16, metavar='N')
 parser.add_argument('--latent-size', type=int, default=16, metavar='N')
-parser.add_argument('--L', type=int, default=10, metavar='N')
+parser.add_argument('--L', type=int, default=1, metavar='N')
 args = parser.parse_args()
 
 torch.manual_seed(args.seed)
