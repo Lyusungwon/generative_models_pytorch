@@ -115,8 +115,9 @@ def sample(inputs):
 	outputs = inputs.clone()
 	# sample = torch.randn(1, 1, args.input_h, args.input_w).to(device)
 	for i in range(args.start_sample, args.input_h * args.input_w):
+		print(i)
 		samples = made(outputs)
-		nmask = (mask == i).float().to(device)
+		nmask = (order == i).float().to(device)
 		# sample_add = torch.bernoulli(samples.view(len(inputs), 1, args.input_h * args.input_w)* nmask).view(len(inputs), 1, args.input_h, args.input_w)
 		sample_add = samples.view(batch_size, 1, args.input_h, args.input_w)* nmask
 		outputs += sample_add
