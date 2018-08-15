@@ -57,9 +57,9 @@ class PlanarFlow(nn.Module):
     def __init__(self, latent_size = 10):
         super(PlanarFlow, self).__init__()
         self.latent_size = latent_size
-        self.w = nn.Parameter(torch.Tensor(1, self.latent_size).normal_())
-        self.b = nn.Parameter(torch.Tensor(1, 1).normal_())
-        self.u = nn.Parameter(torch.Tensor(1, self.latent_size).normal_())
+        self.w = nn.Parameter(torch.Tensor(1, self.latent_size).normal_(0, 0.02))
+        self.b = nn.Parameter(torch.Tensor(1, 1).normal_(0, 0.02))
+        self.u = nn.Parameter(torch.Tensor(1, self.latent_size).normal_(0, 0.02))
 
     def forward(self, z):
         f = F.tanh(F.linear(z, self.w, self.b))
