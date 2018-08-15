@@ -13,10 +13,11 @@ from torchvision.utils import save_image
 from tensorboardX import SummaryWriter
 
 parser = argparser.default_parser()
+parser.add_argument('--name', type=str, default='cvae', metavar='N')
 parser.add_argument('--input-h', type=int, default=28, metavar='N')
 parser.add_argument('--input-w', type=int, default=28, metavar='N')
 parser.add_argument('--channel-size', type=int, default=1, metavar='N')
-parser.add_argument('--filter-num', type=int, default=16, metavar='N')
+parser.add_argument('--filter-num', type=int, default=32, metavar='N')
 parser.add_argument('--latent-size', type=int, default=16, metavar='N')
 parser.add_argument('--L', type=int, default=1, metavar='N')
 args = parser.parse_args()
@@ -29,7 +30,7 @@ else:
 	device = torch.device('cuda:{}'.format(args.device))
 	torch.cuda.set_device(args.device)
 
-config_list = [args.epochs, args.batch_size, args.lr, 
+config_list = [args.name, args.epochs, args.batch_size, args.lr, 
 				args.input_h, args.input_w, args.channel_size,
 				args.filter_num, args.latent_size,
 				args.L]
@@ -46,8 +47,8 @@ test_loader = dataloader.test_loader('mnist', args.data_directory, args.batch_si
 encoder = model.Encoder(args.channel_size, args.input_h, args.input_w, args.filter_num, args.latent_size).to(device)
 decoder = model.Decoder(args.channel_size, args.input_h, args.input_w, args.filter_num, args.latent_size).to(device)
 if args.load_model != '000000000000':
-	encoder.load_state_dict(torch.load(args.log_directory + 'cvae/' + args.load_model + '/cvae_encoder.pt'))
-	decoder.load_state_dict(torch.load(args.log_directory + 'cvae/' + args.load_model + '/cvae_decoder.pt'))
+	encoder.load_state_dict(torch.load(args.log_directory + args.name + '/' + args.load_model + '/{}_encoder.pt'.format(args.name)))
+	decoder.load_state_dict(torch.load(args.log_directory + args.name + '/' + args.load_model + '/{}_decoder.pt'.format(args.name)))
 	args.time_stamep = args.load_model[:12]
 
 log = args.log_directory + 'cvae/' + args.time_stamp + config + '/'
@@ -143,8 +144,8 @@ for epoch in range(args.epochs):
 	sample(epoch)
 
 if not args.sample:
-	torch.save(encoder.state_dict(), log + 'cvae_encoder.pt')
-	torch.save(decoder.state_dict(), log + 'cvae_decoder.pt')
-	print('Model saved in ', log + 'cvae_encoder.pt')
-	print('Model saved in ', log + 'cvae_decoder.pt')
+	torch.save(encoder.state_dict(), log + '/{}_encoder.pt'.format(args.name))
+	torch.save(decoder.state_dict(), log + '/{}_decoder.pt'.format(args.name))
+	print('Model saved in ', log + '/{}_encoder.pt'.format(args.name))
+	print('Model saved in ', log + '/{}_decoder.pt'.format(args.name))
 writer.close()
