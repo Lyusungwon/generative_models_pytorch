@@ -13,7 +13,7 @@ from torchvision.utils import save_image
 from tensorboardX import SummaryWriter
 
 parser = argparser.default_parser()
-parser.add_argument('--name', type=str, default='vae_nf', metavar='N')
+parser.add_argument('--name', type=str, default='vae', metavar='N')
 parser.add_argument('--input-h', type=int, default=28, metavar='N')
 parser.add_argument('--input-w', type=int, default=28, metavar='N')
 parser.add_argument('--hidden-size', type=int, default=400, metavar='N')
