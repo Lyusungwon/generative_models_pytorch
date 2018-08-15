@@ -119,7 +119,7 @@ def sample(inputs):
 		samples = made(outputs)
 		nmask = (order == i).float().to(device)
 		# sample_add = torch.bernoulli(samples.view(len(inputs), 1, args.input_h * args.input_w)* nmask).view(len(inputs), 1, args.input_h, args.input_w)
-		sample_add = samples.view(batch_size, 1, args.input_h, args.input_w)* nmask
+		sample_add = (samples.view(batch_size, 1, args.input_h * args.input_w)* nmask).view(batch_size, 1, args.input_h, args.input_w)
 		outputs += sample_add
 	return inputs, outputs
 	# if not os.path.exists(log + 'results'):
