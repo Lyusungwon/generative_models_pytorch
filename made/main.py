@@ -120,8 +120,6 @@ def sample(inputs):
 		# sample_add = torch.bernoulli(samples.view(len(inputs), 1, args.input_h * args.input_w)* nmask).view(len(inputs), 1, args.input_h, args.input_w)
 		sample_add = samples.view(batch_size, 1, args.input_h, args.input_w)* nmask
 		outputs += sample_add
-	print(inputs.size(), outputs.size())
-		# writer.add_image('Sample Image', inputs, epoch)
 	return inputs, outputs
 	# if not os.path.exists(log + 'results'):
 	# 	os.mkdir(log + 'results')
