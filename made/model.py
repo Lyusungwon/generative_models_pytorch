@@ -3,16 +3,21 @@ from torch import nn
 import torch.nn.functional as F
 
 class Made(nn.Module):
-    def __init__(self, input_h = 28, input_w = 28, hidden_size = 1000, layer_size = 2, mask_num = 32):
+    def __init__(self, input_h = 28, input_w = 28, hidden_size = 1000, layer_size = 2, random_order = False, mask_num = 1):
         super(Made, self).__init__()
         self.input_h = input_h
         self.input_w = input_w
         self.hidden_size = hidden_size
         self.layer_size = layer_size
+        self.random_order = random_order
         self.mask_num = mask_num
-        self.m = {}
-        for i in range(self.mask_num):
-            self.m[i] = torch.randperm(self.input_h * self.input_w)
+        self.order = {}
+        if self.random_order:
+            for i in range(self.mask_num):
+                self.order[i] = torch.randperm(self.input_h * self.input_w)
+        else:
+            self.order[0] = torch.Tensor([i for i in range(self.input_h * self.input_w)])
+
         self.layer_num = [self.input_h * self.input_w]
         for j in range(self.layer_size):
             self.layer_num.append(self.hidden_size)
@@ -28,7 +33,10 @@ class Made(nn.Module):
         self.register_buffer('maska', torch.tril(torch.ones(self.input_h * self.input_w, self.input_h * self.input_w), -1))
     def update_mask(self):
         m = {}
-        m[0] = self.m[torch.randint(0, self.mask_num, (1,)).item()]
+        if self.random_order:
+            m[0] = self.order[torch.randint(0, self.mask_num, (1,)).item()]
+        else:
+            m[0] = self.order[0]
         for l in range(1, self.layer_size +1):
             m[l] = torch.randint(m[l-1].min().int().item(), self.input_h * self.input_w - 1, size = (self.hidden_size,))
         self.mask = [m[l-1][:, None].long() <= m[l][None, :].long() for l in range(1, self.layer_size + 1)]

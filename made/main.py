@@ -13,12 +13,14 @@ from torchvision.utils import save_image
 from tensorboardX import SummaryWriter
 
 parser = argparser.default_parser()
+parser.add_argument('--name', type=str, default='made', metavar='N')
 parser.add_argument('--input-h', type=int, default=28, metavar='N')
 parser.add_argument('--input-w', type=int, default=28, metavar='N')
-parser.add_argument('--hidden-size', type=int, default=8000, metavar='N')
+parser.add_argument('--hidden-size', type=int, default=1000, metavar='N')
 parser.add_argument('--layer-size', type=int, default=2, metavar='N')
-parser.add_argument('--mask-num', type=int, default=32, metavar='N')
+parser.add_argument('--mask-num', type=int, default=1, metavar='N')
 parser.add_argument('--start-sample', type=int, default=394, metavar='N')
+parser.add_argument('--random-order', action='store_true', default=False)
 args = parser.parse_args()
 
 torch.manual_seed(args.seed)
@@ -29,9 +31,10 @@ else:
 	device = torch.device('cuda:{}'.format(args.device))
 	torch.cuda.set_device(args.device)
 
-config_list = [args.epochs, args.batch_size, args.lr, 
+config_list = [args.name, args.epochs, args.batch_size, args.lr, 
 				args.input_h, args.input_w, 
-				args.hidden_size, args.layer_size, args.mask_num]
+				args.hidden_size, args.layer_size, 
+				args.mask_num, args.random_order]
 if args.sample:
 	config_list.append('sample')
 	config_list.append(args.start_sample)
@@ -43,12 +46,12 @@ print("Config:", config)
 train_loader = dataloader.train_loader('mnist', args.data_directory, args.batch_size)
 test_loader = dataloader.test_loader('mnist', args.data_directory, args.batch_size)
 
-made = model.Made(args.input_h, args.input_w, args.hidden_size, args.layer_size, args.mask_num).to(device)
+made = model.Made(args.input_h, args.input_w, args.hidden_size, args.layer_size, args.random_order, args.mask_num).to(device)
 if args.load_model != '000000000000':
-	made.load_state_dict(torch.load(args.log_directory + 'made/' + args.load_model + '/made.pt'))
+	made.load_state_dict(torch.load(args.log_directory + args.name + '/' + args.load_model + '/{}.pt'.format(args.name)))
 	args.time_stamp = args.load_model[:12]
 
-log = args.log_directory + 'made/' + args.time_stamp + config + '/'
+log = args.log_directory + args.name + '/' + args.time_stamp + config + '/'
 writer = SummaryWriter(log)
 optimizer = optim.Adam(made.parameters(), lr = args.lr)
 def binarize(data):
@@ -130,6 +133,6 @@ for epoch in range(args.epochs):
 	test(epoch)
 
 if not args.sample:
-	torch.save(made.state_dict(), log + 'made.pt')
-	print('Model saved in ', log + 'made.pt')
+	torch.save(made.state_dict(), log + '{}.pt'.format(args.name))
+	print('Model saved in ', log + '{}.pt'.format(args.name))
 writer.close()
