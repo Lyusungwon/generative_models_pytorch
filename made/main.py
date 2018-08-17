@@ -113,20 +113,13 @@ def sample(inputs):
 	mask = (order < args.start_sample).float().view(1, 1, args.input_h, args.input_w).repeat(8,1,1,1).to(device)
 	inputs = inputs * mask
 	outputs = inputs.clone()
-	# sample = torch.randn(1, 1, args.input_h, args.input_w).to(device)
 	for i in range(args.start_sample, args.input_h * args.input_w):
-		print(i)
 		samples = made(outputs)
 		nmask = (order == i).float().to(device)
 		# sample_add = torch.bernoulli(samples.view(len(inputs), 1, args.input_h * args.input_w)* nmask).view(len(inputs), 1, args.input_h, args.input_w)
 		sample_add = (samples.view(batch_size, 1, args.input_h * args.input_w)* nmask).view(batch_size, 1, args.input_h, args.input_w)
 		outputs += sample_add
 	return inputs, outputs
-	# if not os.path.exists(log + 'results'):
-	# 	os.mkdir(log + 'results')
-	# save_image(output,
-	# 		   log + 'results/sample_' + str(epoch) + '.png')
-
 
 for epoch in range(args.epochs):
 	if not args.sample:
