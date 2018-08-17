@@ -66,7 +66,7 @@ def train(epoch):
 		start_time = time.time()
 		optimizer.zero_grad()
 		batch_size = input_data.size()[0]
-		input_data = binarize(input_data)
+		# input_data = binarize(input_data)
 		input_data = input_data.to(args.device)
 		made.update_mask()
 		recon = made(input_data)
@@ -87,8 +87,9 @@ def test(epoch):
 	test_loss = 0
 	for i, (input_data, label) in enumerate(test_loader):
 		batch_size = input_data.size()[0]
-		input_data = binarize(input_data)
+		# input_data = binarize(input_data)
 		input_data = input_data.to(device)
+		made.update_mask()
 		recon = made(input_data)
 		loss = F.binary_cross_entropy(recon, input_data, size_average=False)
 		test_loss += loss.item()
