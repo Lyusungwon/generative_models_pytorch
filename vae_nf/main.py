@@ -70,7 +70,7 @@ def train(epoch):
     train_loss = 0
     r_loss = 0
     k_loss = 0
-    log_abs_det_jacobian_sum = 0
+    d_loss = 0
     encoder.train()
     decoder.train()
     nflow.train()
@@ -99,7 +99,7 @@ def train(epoch):
         kld_loss = D.kl_divergence(q, prior).sum()
         if args.K != 0:
             log_abs_det_jacobian = log_abs_det_jacobian.sum()
-            log_abs_det_jacobian_sum += log_abs_det_jacobian
+            d_loss += log_abs_det_jacobian
         r_loss += reconstruction_loss.item()
         k_loss += kld_loss.item()
         beta = min(1, (epoch+ 0.01)/args.epochs)
@@ -115,7 +115,7 @@ def train(epoch):
         epoch, train_loss / len(train_loader.dataset), time.time() - epoch_start_time))
     writer.add_scalars('Train loss', {'Reconstruction loss': r_loss / len(train_loader.dataset),
                                       'KL divergence': k_loss / len(train_loader.dataset),
-                                      'Determinant': - log_abs_det_jacobian_sum / len(train_loader.dataset),
+                                      'Determinant': - d_loss / len(train_loader.dataset),
                                       'Train loss': train_loss / len(train_loader.dataset)}, epoch)
 
 
@@ -123,6 +123,9 @@ def test(epoch):
     encoder.eval()
     decoder.eval()
     nflow.eval()
+    r_loss= 0
+    k_loss = 0
+    d_loss = 0
     test_loss = 0
     for i, (input_data, label) in enumerate(test_loader):
         batch_size = input_data.size()[0]
@@ -138,8 +141,11 @@ def test(epoch):
         q = D.Normal(z_mu, (z_logvar / 2).exp())
         kld_loss = D.kl_divergence(q, prior).sum()
         if args.K != 0:
-            kld_loss += log_abs_det_jacobian.sum()
-        loss = reconstruction_loss + kld_loss
+            log_abs_det_jacobian = log_abs_det_jacobian.sum()
+            d_loss += log_abs_det_jacobian
+        r_loss += reconstruction_loss.item()
+        k_loss += kld_loss.item()
+        loss = reconstruction_loss + kld_loss - log_abs_det_jacobian
         test_loss += loss.item()
         if i == 0:
             n = min(batch_size, 8)
@@ -148,7 +154,10 @@ def test(epoch):
             writer.add_image('Reconstruction Image', comparison, epoch)
     test_loss /= len(test_loader.dataset)
     print('====> Test set loss: {:.4f}'.format(test_loss))
-    writer.add_scalar('Test loss', test_loss, epoch)
+    writer.add_scalars('Test loss', {'Reconstruction loss': r_loss / len(test_loader.dataset),
+                                            'KL divergence': k_loss / len(test_loader.dataset),
+                                            'Determinant': d_loss / len(test_loader.dataset),
+                                            'Test loss': test_loss / len(test_loader.dataset)}, epoch)
 
 
 def sample(epoch):
@@ -168,8 +177,7 @@ for epoch in range(args.epochs):
     # save_image(output,
     # 		   log + 'results/sample_' + str(epoch) + '.png')
 if not args.sample:
-    writer.add_image('Sample Image', output, epoch)
-    torch.save(encoder.state_dict(), log + + '{}_encoder.pt'.format(args.name))
+    torch.save(encoder.state_dict(), log + '{}_encoder.pt'.format(args.name))
     torch.save(decoder.state_dict(), log + '{}_decoder.pt'.format(args.name))
     torch.save(nflow.state_dict(), log + '{}_flow.pt'.format(args.name))
     print('Model saved in ', log + '{}_encoder.pt'.format(args.name))
