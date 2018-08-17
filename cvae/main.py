@@ -51,7 +51,7 @@ if args.load_model != '000000000000':
 	decoder.load_state_dict(torch.load(args.log_directory + args.name + '/' + args.load_model + '/{}_decoder.pt'.format(args.name)))
 	args.time_stamep = args.load_model[:12]
 
-log = args.log_directory + 'cvae/' + args.time_stamp + config + '/'
+log = args.log_directory + args.name + '/' + args.time_stamp + config + '/'
 writer = SummaryWriter(log)
 
 optimizer = optim.Adam(list(encoder.parameters())+list(decoder.parameters()), lr = args.lr)
@@ -123,7 +123,7 @@ def test(epoch):
 			comparison = torch.cat([input_data[:n],
 								  output_data[:n]])
 			writer.add_image('Reconstruction Image', comparison, epoch)
-	print('====> Test set loss: {:.4f}'.format(test_loss))
+	print('====> Test set loss: {:.4f}'.format(test_loss) / len(test_loader.dataset))
 	writer.add_scalars('Test loss', {'Reconstruction loss': r_loss / len(test_loader.dataset),
 											'KL divergence': k_loss / len(test_loader.dataset),
 											'Test loss': test_loss / len(test_loader.dataset)}, epoch)
