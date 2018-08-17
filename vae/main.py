@@ -139,7 +139,7 @@ for epoch in range(args.epochs):
 	sample(epoch)
 
 if not args.sample:
-	torch.save(encoder.state_dict(), log + + '{}_encoder.pt'.format(args.name))
+	torch.save(encoder.state_dict(), log + '{}_encoder.pt'.format(args.name))
 	torch.save(decoder.state_dict(), log + '{}_decoder.pt'.format(args.name))
 	print('Model saved in ', log + '{}_encoder.pt'.format(args.name))
 	print('Model saved in ', log + '{}_decoder.pt'.format(args.name))
