@@ -49,7 +49,7 @@ decoder = model.Decoder(args.input_h, args.input_w, args.hidden_size, args.laten
 nflow = model.NormalizingFlow(args.latent_size, args.K).to(device)
 
 if args.load_model != '000000000000':
-    encoder.load_state_dict(torch.load(args.log_directory + '/' + args.load_model+ '/{}_encoder.pt'.format(args.name)))
+    encoder.load_state_dict(torch.load(args.log_directory + '/' + args.load_model + '/{}_encoder.pt'.format(args.name)))
     decoder.load_state_dict(torch.load(args.log_directory + '/' + args.load_model + '/{}_decoder.pt'.format(args.name)))
     nflow.load_state_dict(torch.load(args.log_directory + '/' + args.load_model + '/{}_flow.pt'.format(args.name)))
     args.time_stamep = args.load_model[:12]
@@ -102,7 +102,7 @@ def train(epoch):
             d_loss += log_abs_det_jacobian
         r_loss += reconstruction_loss.item()
         k_loss += kld_loss.item()
-        beta = min(1, (epoch+ 0.01)/args.epochs)
+        beta = min(1, (epoch + 0.01) / args.epochs)
         loss = beta * reconstruction_loss + kld_loss - log_abs_det_jacobian
         loss.backward()
         train_loss += loss.item()
@@ -123,7 +123,7 @@ def test(epoch):
     encoder.eval()
     decoder.eval()
     nflow.eval()
-    r_loss= 0
+    r_loss = 0
     k_loss = 0
     d_loss = 0
     test_loss = 0
@@ -152,12 +152,11 @@ def test(epoch):
             comparison = torch.cat([input_data[:n],
                                     output_data[:n]])
             writer.add_image('Reconstruction Image', comparison, epoch)
-    test_loss /= len(test_loader.dataset)
     print('====> Test set loss: {:.4f}'.format(test_loss))
     writer.add_scalars('Test loss', {'Reconstruction loss': r_loss / len(test_loader.dataset),
-                                            'KL divergence': k_loss / len(test_loader.dataset),
-                                            'Determinant': d_loss / len(test_loader.dataset),
-                                            'Test loss': test_loss / len(test_loader.dataset)}, epoch)
+                                     'KL divergence': k_loss / len(test_loader.dataset),
+                                     'Determinant': - d_loss / len(test_loader.dataset),
+                                     'Test loss': test_loss / len(test_loader.dataset)}, epoch)
 
 
 def sample(epoch):
@@ -173,9 +172,9 @@ for epoch in range(args.epochs):
         test(epoch)
     sample(epoch)
     # if not os.path.exists(log + 'results'):
-    # 	os.mkdir(log + 'results')
+    #   os.mkdir(log + 'results')
     # save_image(output,
-    # 		   log + 'results/sample_' + str(epoch) + '.png')
+    #          log + 'results/sample_' + str(epoch) + '.png')
 if not args.sample:
     torch.save(encoder.state_dict(), log + '{}_encoder.pt'.format(args.name))
     torch.save(decoder.state_dict(), log + '{}_decoder.pt'.format(args.name))
