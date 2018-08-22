@@ -49,7 +49,7 @@ decoder = model.Decoder(args.channel_size, args.input_h, args.input_w, args.filt
 if args.load_model != '000000000000':
 	encoder.load_state_dict(torch.load(args.log_directory + args.name + '/' + args.load_model + '/{}_encoder.pt'.format(args.name)))
 	decoder.load_state_dict(torch.load(args.log_directory + args.name + '/' + args.load_model + '/{}_decoder.pt'.format(args.name)))
-	args.time_stamep = args.load_model[:12]
+	args.time_stamp = args.load_model[:12]
 
 log = args.log_directory + args.name + '/' + args.time_stamp + config + '/'
 writer = SummaryWriter(log)
