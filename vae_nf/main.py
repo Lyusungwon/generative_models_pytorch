@@ -49,9 +49,9 @@ decoder = model.Decoder(args.input_h, args.input_w, args.hidden_size, args.laten
 nflow = model.NormalizingFlow(args.latent_size, args.K).to(device)
 
 if args.load_model != '000000000000':
-    encoder.load_state_dict(torch.load(args.log_directory + '/' + args.load_model + '/{}_encoder.pt'.format(args.name)))
-    decoder.load_state_dict(torch.load(args.log_directory + '/' + args.load_model + '/{}_decoder.pt'.format(args.name)))
-    nflow.load_state_dict(torch.load(args.log_directory + '/' + args.load_model + '/{}_flow.pt'.format(args.name)))
+    encoder.load_state_dict(torch.load(args.log_directory + args.name + '/' + args.load_model + '/{}_encoder.pt'.format(args.name)))
+    decoder.load_state_dict(torch.load(args.log_directory + args.name + '/' + args.load_model + '/{}_decoder.pt'.format(args.name)))
+    nflow.load_state_dict(torch.load(args.log_directory + args.name + '/' + args.load_model + '/{}_flow.pt'.format(args.name)))
     args.time_stamep = args.load_model[:12]
 
 log = args.log_directory + args.name + '/' + args.time_stamp + config + '/'
