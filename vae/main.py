@@ -132,7 +132,7 @@ def sample(epoch):
 	output = decoder(sample.sample(torch.Size([64])))
 	writer.add_image('Sample Image', output, epoch)
 
-for epoch in range(args.epochs):
+for epoch in range(args.start_epoch, args.start_epoch + args.epochs):
 	if not args.sample:
 		train(epoch)
 		test(epoch)

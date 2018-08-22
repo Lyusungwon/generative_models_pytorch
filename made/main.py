@@ -122,7 +122,7 @@ def sample(inputs):
 		outputs += sample_add
 	return inputs, outputs
 
-for epoch in range(args.epochs):
+for epoch in range(args.start_epoch, args.start_epoch + args.epochs):
 	if not args.sample:
 		train(epoch)
 	test(epoch)
