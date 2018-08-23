@@ -14,7 +14,9 @@ class Encoder(nn.Module):
             nn.ReLU(inplace=True),
             nn.Conv2d(self.filter_num, self.filter_num * 2, 4, 2),
             nn.ReLU(inplace=True),
-            nn.Conv2d(self.filter_num * 2, 2, 4, 2)
+            nn.Conv2d(self.filter_num * 2, self.filter_num * 4, 4, 2),
+            nn.ReLU(inplace=True),
+            nn.Conv2d(self.filter_num * 4, self.latent_size * 2, 4, 1)
             )
 
     def forward(self, x):
