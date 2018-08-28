@@ -79,31 +79,30 @@ def train(epoch):
         batch_size = input_data.size()[0]
         prior = D.Normal(torch.zeros(batch_size, args.latent_size).to(device), torch.ones(batch_size, args.latent_size).to(device))
         optimizer.zero_grad()
-        input_data = binarize(input_data)
+        # input_data = binarize(input_data)
         input_data = input_data.to(device)
         z_params = encoder(input_data)
         z_mu = z_params[:, 0]
         z_logvar = z_params[:, 1]
-        reconstruction_loss = 0
-        log_abs_det_jacobian = 0
+        q_0 = D.Normal(z_mu, (z_logvar / 2).exp())
+        log_pxz = 0
+        log_abs_det_jacobian_sum = 0
+        log_q0_z0 = 0
         for j in range(args.L):
-            epsilon = prior.sample().to(device)
-            z = z_mu + epsilon * (z_logvar / 2).exp()
-            z_t, log_abs_det_jacobian_t = nflow(z)
-            log_abs_det_jacobian += log_abs_det_jacobian_t
+            z_0 = q_0.rsample().to(device)
+            z_t, log_abs_det_jacobian = nflow(z_0)
+            log_abs_det_jacobian_sum += log_abs_det_jacobian.sum()
             output_data = decoder(z_t)
-            reconstruction_loss += F.binary_cross_entropy(output_data, input_data.detach(), size_average=False)
-        log_abs_det_jacobian /= args.L
-        reconstruction_loss /= args.L
-        q = D.Normal(z_mu, (z_logvar / 2).exp())
-        kld_loss = D.kl_divergence(q, prior).sum()
-        if args.K != 0:
-            log_abs_det_jacobian = log_abs_det_jacobian.sum()
-            d_loss += log_abs_det_jacobian
-        r_loss += reconstruction_loss.item()
-        k_loss += kld_loss.item()
+            log_pz = prior.log_prob(z_t).sum()
+            log_pxz += F.binary_cross_entropy(output_data, input_data.detach(), size_average=False) - log_pz
+            log_q0_z0 += q_0.log_prob(z_0).sum()
+        log_qk_zk =log_q0_z0 - log_abs_det_jacobian_sum
+        log_qk_zk /= args.L
+        log_pxz /= args.L
+        r_loss += log_pxz.item()
+        k_loss += log_qk_zk.item()
         beta = min(1, (epoch + 0.01) / args.epochs)
-        loss = beta * reconstruction_loss + kld_loss - log_abs_det_jacobian
+        loss = log_qk_zk + beta * log_pxz 
         loss.backward()
         train_loss += loss.item()
         optimizer.step()
@@ -115,7 +114,6 @@ def train(epoch):
         epoch, train_loss / len(train_loader.dataset), time.time() - epoch_start_time))
     writer.add_scalars('Train loss', {'Reconstruction loss': r_loss / len(train_loader.dataset),
                                       'KL divergence': k_loss / len(train_loader.dataset),
-                                      'Determinant': - d_loss / len(train_loader.dataset),
                                       'Train loss': train_loss / len(train_loader.dataset)}, epoch)
 
 
@@ -135,17 +133,25 @@ def test(epoch):
         z_params = encoder(input_data)
         z_mu = z_params[:, 0]
         z_logvar = z_params[:, 1]
-        z_t, log_abs_det_jacobian = nflow(z_mu)
-        output_data = decoder(z_t)
-        reconstruction_loss = F.binary_cross_entropy(output_data, input_data.detach(), size_average=False)
-        q = D.Normal(z_mu, (z_logvar / 2).exp())
-        kld_loss = D.kl_divergence(q, prior).sum()
-        if args.K != 0:
-            log_abs_det_jacobian = log_abs_det_jacobian.sum()
-            d_loss += log_abs_det_jacobian
-        r_loss += reconstruction_loss.item()
-        k_loss += kld_loss.item()
-        loss = reconstruction_loss + kld_loss - log_abs_det_jacobian
+        q_0 = D.Normal(z_mu, (z_logvar / 2).exp())
+        log_pxz = 0
+        log_abs_det_jacobian_sum = 0
+        log_q0_z0 = 0
+        for j in range(args.L):
+            z_0 = q_0.rsample().to(device)
+            z_t, log_abs_det_jacobian = nflow(z_0)
+            log_abs_det_jacobian_sum += log_abs_det_jacobian.sum()
+            output_data = decoder(z_t)
+            log_pz = prior.log_prob(z_t).sum()
+            log_pxz += F.binary_cross_entropy(output_data, input_data.detach(), size_average=False) - log_pz
+            log_q0_z0 += q_0.log_prob(z_0).sum()
+        log_qk_zk = log_q0_z0 - log_abs_det_jacobian_sum
+        log_qk_zk /= args.L
+        log_pxz /= args.L
+        r_loss += log_pxz.item()
+        k_loss += log_qk_zk.item()
+        beta = min(1, (epoch + 0.01) / args.epochs)
+        loss = log_qk_zk + beta * log_pxz 
         test_loss += loss.item()
         if i == 0:
             n = min(batch_size, 8)
@@ -155,7 +161,6 @@ def test(epoch):
     print('====> Test set loss: {:.4f}'.format(test_loss))
     writer.add_scalars('Test loss', {'Reconstruction loss': r_loss / len(test_loader.dataset),
                                      'KL divergence': k_loss / len(test_loader.dataset),
-                                     'Determinant': - d_loss / len(test_loader.dataset),
                                      'Test loss': test_loss / len(test_loader.dataset)}, epoch)
 
 
