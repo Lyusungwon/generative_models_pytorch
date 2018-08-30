@@ -20,6 +20,8 @@ parser.add_argument('--hidden-size', type=int, default=400, metavar='N')
 parser.add_argument('--latent-size', type=int, default=40, metavar='N')
 parser.add_argument('--K', type=int, default=10, metavar='N')
 parser.add_argument('--L', type=int, default=1, metavar='N')
+parser.add_argument('--anneal', action='store_true', default=False,
+                    help='sample with pretrained model (default: False)')
 args = parser.parse_args()
 
 torch.manual_seed(args.seed)
@@ -33,7 +35,7 @@ else:
 config_list = [args.name, args.epochs, args.batch_size, args.lr,
                args.input_h, args.input_w,
                args.hidden_size, args.latent_size,
-               args.K, args.L]
+               args.K, args.L, args.anneal]
 if args.sample:
     config_list.append('sample')
 config = ""
@@ -74,6 +76,10 @@ def train(epoch):
     encoder.train()
     decoder.train()
     nflow.train()
+    if args.anneal:
+        beta = min(1, (epoch + 0.01) / args.epochs)
+    else:
+        beta = 1
     for batch_idx, (input_data, label) in enumerate(train_loader):
         start_time = time.time()
         batch_size = input_data.size()[0]
@@ -101,7 +107,6 @@ def train(epoch):
         log_pxz /= args.L
         r_loss += log_pxz.item()
         k_loss += log_qk_zk.item()
-        beta = min(1, (epoch + 0.01) / args.epochs)
         loss = log_qk_zk + beta * log_pxz 
         loss.backward()
         train_loss += loss.item()
@@ -128,7 +133,7 @@ def test(epoch):
     for i, (input_data, label) in enumerate(test_loader):
         batch_size = input_data.size()[0]
         prior = D.Normal(torch.zeros(batch_size, args.latent_size).to(device), torch.ones(batch_size, args.latent_size).to(device))
-        input_data = binarize(input_data)
+        # input_data = binarize(input_data)
         input_data = input_data.to(device)
         z_params = encoder(input_data)
         z_mu = z_params[:, 0]
@@ -150,8 +155,7 @@ def test(epoch):
         log_pxz /= args.L
         r_loss += log_pxz.item()
         k_loss += log_qk_zk.item()
-        beta = min(1, (epoch + 0.01) / args.epochs)
-        loss = log_qk_zk + beta * log_pxz 
+        loss = log_qk_zk + log_pxz 
         test_loss += loss.item()
         if i == 0:
             n = min(batch_size, 8)
