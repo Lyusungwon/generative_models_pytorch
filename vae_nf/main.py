@@ -111,9 +111,9 @@ def train(epoch):
 				100. * batch_idx / len(train_loader), loss.item() / len(input_data), time.time() - start_time))
 	print('====> Epoch: {} Average loss: {:.4f}\tTime: {:.4f}'.format(
 		epoch, train_loss / len(train_loader.dataset), time.time() - epoch_start_time))
-	wrtier.add_scalar('Reconstruction loss',  r_loss / len(train_loader.dataset), epoch)
-	wrtier.add_scalar('KL divergence',  k_loss / len(train_loader.dataset), epoch)
-	wrtier.add_scalar('Train loss',  train_loss / len(train_loader.dataset), epoch)
+	writer.add_scalar('Reconstruction loss',  r_loss / len(train_loader.dataset), epoch)
+	writer.add_scalar('KL divergence',  k_loss / len(train_loader.dataset), epoch)
+	writer.add_scalar('Train loss',  train_loss / len(train_loader.dataset), epoch)
 
 
 def test(epoch):
@@ -153,9 +153,9 @@ def test(epoch):
 									output_data[:n]])
 			writer.add_image('Reconstruction Image', comparison, epoch)
 	print('====> Test set loss: {:.4f}'.format(test_loss))
-	wrtier.add_scalar('Reconstruction loss',  r_loss / len(test_loader.dataset), epoch)
-	wrtier.add_scalar('KL divergence',  k_loss / len(test_loader.dataset), epoch)
-	wrtier.add_scalar('Test loss',  test_loss / len(test_loader.dataset), epoch)
+	writer.add_scalar('Reconstruction loss',  r_loss / len(test_loader.dataset), epoch)
+	writer.add_scalar('KL divergence',  k_loss / len(test_loader.dataset), epoch)
+	writer.add_scalar('Test loss',  test_loss / len(test_loader.dataset), epoch)
 
 
 def sample(epoch):
