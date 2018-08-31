@@ -85,29 +85,25 @@ def train(epoch):
         batch_size = input_data.size()[0]
         prior = D.Normal(torch.zeros(batch_size, args.latent_size).to(device), torch.ones(batch_size, args.latent_size).to(device))
         optimizer.zero_grad()
-        # input_data = binarize(input_data)
+        input_data = binarize(input_data)
         input_data = input_data.to(device)
         z_params = encoder(input_data)
         z_mu = z_params[:, 0]
         z_logvar = z_params[:, 1]
         q_0 = D.Normal(z_mu, (z_logvar / 2).exp())
-        log_pxz = 0
-        log_abs_det_jacobian_sum = 0
-        log_q0_z0 = 0
+        recon_loss = 0
+        kld_loss = 0
         for j in range(args.L):
             z_0 = q_0.rsample().to(device)
             z_t, log_abs_det_jacobian = nflow(z_0)
-            log_abs_det_jacobian_sum += log_abs_det_jacobian.sum()
             output_data = decoder(z_t)
-            log_pz = prior.log_prob(z_t).sum()
-            log_pxz += F.binary_cross_entropy(output_data, input_data.detach(), size_average=False) - log_pz
-            log_q0_z0 += q_0.log_prob(z_0).sum()
-        log_qk_zk =log_q0_z0 - log_abs_det_jacobian_sum
-        log_qk_zk /= args.L
-        log_pxz /= args.L
-        r_loss += log_pxz.item()
-        k_loss += log_qk_zk.item()
-        loss = log_qk_zk + beta * log_pxz 
+            recon_loss += F.binary_cross_entropy(output_data, input_data.detach(), size_average=False)
+            kld_loss += q_0.log_prob(z_0).sum() - log_abs_det_jacobian.sum() - beta * prior.log_prob(z_t).sum()
+        recon_loss /= args.L
+        kld_loss /= args.L
+        r_loss += recon_loss.item()
+        k_loss += kld_loss.item()
+        loss = kld_loss + beta * recon_loss
         loss.backward()
         train_loss += loss.item()
         optimizer.step()
@@ -133,29 +129,25 @@ def test(epoch):
     for i, (input_data, label) in enumerate(test_loader):
         batch_size = input_data.size()[0]
         prior = D.Normal(torch.zeros(batch_size, args.latent_size).to(device), torch.ones(batch_size, args.latent_size).to(device))
-        # input_data = binarize(input_data)
+        input_data = binarize(input_data)
         input_data = input_data.to(device)
         z_params = encoder(input_data)
         z_mu = z_params[:, 0]
         z_logvar = z_params[:, 1]
         q_0 = D.Normal(z_mu, (z_logvar / 2).exp())
-        log_pxz = 0
-        log_abs_det_jacobian_sum = 0
-        log_q0_z0 = 0
+        recon_loss = 0
+        kld_loss = 0
         for j in range(args.L):
             z_0 = q_0.rsample().to(device)
             z_t, log_abs_det_jacobian = nflow(z_0)
-            log_abs_det_jacobian_sum += log_abs_det_jacobian.sum()
             output_data = decoder(z_t)
-            log_pz = prior.log_prob(z_t).sum()
-            log_pxz += F.binary_cross_entropy(output_data, input_data.detach(), size_average=False) - log_pz
-            log_q0_z0 += q_0.log_prob(z_0).sum()
-        log_qk_zk = log_q0_z0 - log_abs_det_jacobian_sum
-        log_qk_zk /= args.L
-        log_pxz /= args.L
-        r_loss += log_pxz.item()
-        k_loss += log_qk_zk.item()
-        loss = log_qk_zk + log_pxz 
+            recon_loss += F.binary_cross_entropy(output_data, input_data.detach(), size_average=False)
+            kld_loss += q_0.log_prob(z_0).sum() - log_abs_det_jacobian.sum() - prior.log_prob(z_t).sum()
+        recon_loss /= args.L
+        kld_loss /= args.L
+        r_loss += recon_loss.item()
+        k_loss += kld_loss.item()
+        loss = recon_loss + kld_loss
         test_loss += loss.item()
         if i == 0:
             n = min(batch_size, 8)

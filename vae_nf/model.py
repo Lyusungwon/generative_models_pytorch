@@ -12,13 +12,15 @@ class Encoder(nn.Module):
         self.encoder = nn.Sequential(
             nn.Linear(self.input_h * self.input_w, self.hidden_size),
             nn.ReLU(inplace= True),
-            nn.Linear(self.hidden_size, self.latent_size * 2)
+            # nn.Linear(self.hidden_size, self.latent_size * 2)
+            nn.Linear(self.hidden_size, self.latent_size)
             )
 
     def forward(self, x):
         x = x.view(-1, self.input_h * self.input_w)
         x = self.encoder(x)
-        x = x.view(-1, 2, self.latent_size)
+        # x = x.view(-1, 2, self.latent_size)
+        x = x.view(-1, self.latent_size)
         return x
 
 class Decoder(nn.Module):
