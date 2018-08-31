@@ -4,12 +4,10 @@ import argparser
 import dataloader
 import model
 import time
-import os
 import torch
 import torch.optim as optim
 import torch.nn.functional as F
 import torch.distributions as D
-from torchvision.utils import save_image
 from tensorboardX import SummaryWriter
 
 parser = argparser.default_parser()
@@ -113,9 +111,9 @@ def train(epoch):
                 100. * batch_idx / len(train_loader), loss.item() / len(input_data), time.time() - start_time))
     print('====> Epoch: {} Average loss: {:.4f}\tTime: {:.4f}'.format(
         epoch, train_loss / len(train_loader.dataset), time.time() - epoch_start_time))
-    writer.add_scalars('Train loss', {'Reconstruction loss': r_loss / len(train_loader.dataset),
-                                      'KL divergence': k_loss / len(train_loader.dataset),
-                                      'Train loss': train_loss / len(train_loader.dataset)}, epoch)
+	wrtier.add_scalar('Reconstruction loss',  r_loss / len(train_loader.dataset), epoch)
+	wrtier.add_scalar('KL divergence',  k_loss / len(train_loader.dataset), epoch)
+	wrtier.add_scalar('Train loss',  train_loss / len(train_loader.dataset), epoch)
 
 
 def test(epoch):
@@ -155,9 +153,9 @@ def test(epoch):
                                     output_data[:n]])
             writer.add_image('Reconstruction Image', comparison, epoch)
     print('====> Test set loss: {:.4f}'.format(test_loss))
-    writer.add_scalars('Test loss', {'Reconstruction loss': r_loss / len(test_loader.dataset),
-                                     'KL divergence': k_loss / len(test_loader.dataset),
-                                     'Test loss': test_loss / len(test_loader.dataset)}, epoch)
+	wrtier.add_scalar('Reconstruction loss',  r_loss / len(test_loader.dataset), epoch)
+	wrtier.add_scalar('KL divergence',  k_loss / len(test_loader.dataset), epoch)
+	wrtier.add_scalar('Test loss',  test_loss / len(test_loader.dataset), epoch)
 
 
 def sample(epoch):
