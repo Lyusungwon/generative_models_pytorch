@@ -36,6 +36,9 @@ config_list = [args.name, args.epochs, args.batch_size, args.lr,
 			   args.K, args.L, args.anneal]
 if args.sample:
 	config_list = [args.load_model[13:], 'sample']
+if args.load_model != '000000000000':
+	for i, j in zip(config_list[3:], args.load_model.split('_')[4:]):
+		i = j
 config = ""
 for i in map(str, config_list):
 	config = config + '_' + i
