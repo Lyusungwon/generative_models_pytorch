@@ -159,9 +159,9 @@ def test(epoch):
 
 
 def sample(epoch):
-	sample = D.Normal(torch.zeros(args.latent_size).to(device), torch.ones(args.latent_size).to(device))
-	# sample_t, log_abs_det_jacobian = nflow(sample.sample(torch.Size([64])))
-	output = decoder(sample)
+	std_n = D.Normal(torch.zeros(args.latent_size).to(device), torch.ones(args.latent_size).to(device))
+	# sample_t, log_abs_det_jacobian = nflow(sample)
+	output = decoder(std_n.sample(torch.Size([64])))
 	writer.add_image('Sample Image', output, epoch)
 
 
