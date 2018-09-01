@@ -160,8 +160,8 @@ def test(epoch):
 
 def sample(epoch):
 	sample = D.Normal(torch.zeros(args.latent_size).to(device), torch.ones(args.latent_size).to(device))
-	sample_t, log_abs_det_jacobian = nflow(sample.sample(torch.Size([64])))
-	output = decoder(sample_t)
+	# sample_t, log_abs_det_jacobian = nflow(sample.sample(torch.Size([64])))
+	output = decoder(sample)
 	writer.add_image('Sample Image', output, epoch)
 
 
@@ -170,10 +170,7 @@ for epoch in range(args.start_epoch , args.start_epoch + args.epochs):
 		train(epoch)
 		test(epoch)
 	sample(epoch)
-	# if not os.path.exists(log + 'results'):
-	#   os.mkdir(log + 'results')
-	# save_image(output,
-	#          log + 'results/sample_' + str(epoch) + '.png')
+
 if not args.sample:
 	torch.save(encoder.state_dict(), log + '{}_encoder.pt'.format(args.name))
 	torch.save(decoder.state_dict(), log + '{}_decoder.pt'.format(args.name))
