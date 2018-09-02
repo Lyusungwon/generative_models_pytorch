@@ -73,17 +73,18 @@ def train(epoch):
 		z_logvar = params[:, 1]
 		q = D.Normal(z_mu, (z_logvar/ 2).exp())
 		reconstruction_loss = 0
+		kld_loss = 0
 		for j in range(args.L):
-			z = q.sample().to(device)
+			z = q.rsample().to(device)
 			output_data = decoder(z)
 			reconstruction_loss += F.binary_cross_entropy(output_data, input_data.detach(), size_average=False)
-			kld_loss = - prior.log_prob(z).sum()
-		kld_loss /= args.L
+			kld_loss += q.log_prob(z).sum() - prior.log_prob(z)
 		reconstruction_loss /= args.L
+		kld_loss /= args.L
+		loss = reconstruction_loss + kld_loss
+		loss.backward()
 		r_loss += reconstruction_loss.item() 
 		k_loss += kld_loss.item()
-		loss = (reconstruction_loss + kld_loss)
-		loss.backward()
 		train_loss += loss.item()
 		optimizer.step()
 		if batch_idx % args.log_interval == 0:
@@ -109,12 +110,14 @@ def test(epoch):
 		params = encoder(input_data)
 		z_mu = params[:, 0]
 		z_logvar = params[:, 1]
-		output_data = decoder(z_mu)
-		reconstruction_loss = F.binary_cross_entropy(output_data, input_data, size_average=False)
-		kld_loss = - prior.log_prob(z_mu).sum()
+		q = D.Normal(z_mu, (z_logvar/ 2).exp())
+		z = q.rsample().to(device)
+		output_data = decoder(z)
+		reconstruction_loss = F.binary_cross_entropy(output_data, input_data.detach(), size_average=False)
+		kld_loss = q.log_prob(z).sum() - prior.log_prob(z)
+		loss = reconstruction_loss + kld_loss
 		r_loss += reconstruction_loss.item() 
 		k_loss += kld_loss.item()
-		loss = reconstruction_loss + kld_loss
 		test_loss += loss.item()
 		if i == 0:
 			n = min(batch_size, 8)
