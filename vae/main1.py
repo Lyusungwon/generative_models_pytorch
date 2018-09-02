@@ -78,7 +78,7 @@ def train(epoch):
 			z = q.rsample().to(device)
 			output_data = decoder(z)
 			reconstruction_loss += F.binary_cross_entropy(output_data, input_data.detach(), size_average=False)
-			kld_loss += q.log_prob(z).sum() - prior.log_prob(z)
+			kld_loss += q.log_prob(z).sum() - prior.log_prob(z).sum()
 		reconstruction_loss /= args.L
 		kld_loss /= args.L
 		loss = reconstruction_loss + kld_loss
@@ -114,7 +114,7 @@ def test(epoch):
 		z = q.rsample().to(device)
 		output_data = decoder(z)
 		reconstruction_loss = F.binary_cross_entropy(output_data, input_data.detach(), size_average=False)
-		kld_loss = q.log_prob(z).sum() - prior.log_prob(z)
+		kld_loss = q.log_prob(z).sum() - prior.log_prob(z).sum()
 		loss = reconstruction_loss + kld_loss
 		r_loss += reconstruction_loss.item() 
 		k_loss += kld_loss.item()
