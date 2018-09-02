@@ -93,9 +93,9 @@ def train(epoch):
 				100. * batch_idx / len(train_loader), loss.item() / len(input_data), time.time() - start_time))
 	print('====> Epoch: {} Average loss: {:.4f}\tTime: {:.4f}'.format(
 		epoch, train_loss / len(train_loader.dataset), time.time() - epoch_start_time))	
-	writer.add_scalars('Train loss', {'Reconstruction loss': r_loss / len(train_loader.dataset),
-											'KL divergence': k_loss / len(train_loader.dataset),
-											'Train loss': train_loss / len(train_loader.dataset)}, epoch)
+	writer.add_scalar('Train Reconstruction loss',  r_loss / len(train_loader.dataset), epoch)
+	writer.add_scalar('Train KL divergence',  k_loss / len(train_loader.dataset), epoch)
+	writer.add_scalar('Train loss',  train_loss / len(train_loader.dataset), epoch)
 
 def test(epoch):
 	encoder.eval()
@@ -125,9 +125,9 @@ def test(epoch):
 								  output_data[:n]])
 			writer.add_image('Reconstruction Image', comparison, epoch)
 	print('====> Test set loss: {:.4f}'.format(test_loss / len(test_loader.dataset)))
-	writer.add_scalars('Test loss', {'Reconstruction loss': r_loss / len(test_loader.dataset),
-											'KL divergence': k_loss / len(test_loader.dataset),
-											'Test loss': test_loss / len(test_loader.dataset)}, epoch)
+	writer.add_scalar('Test Reconstruction loss',  r_loss / len(test_loader.dataset), epoch)
+	writer.add_scalar('Test KL divergence',  k_loss / len(test_loader.dataset), epoch)
+	writer.add_scalar('Test loss',  test_loss / len(test_loader.dataset), epoch)
 
 def sample(epoch):
 	sample = D.Normal(torch.zeros(args.latent_size).to(device), torch.ones(args.latent_size).to(device))

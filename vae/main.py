@@ -48,7 +48,7 @@ decoder = model.Decoder(args.input_h, args.input_w, args.hidden_size, args.laten
 if args.load_model != '000000000000':
 	encoder.load_state_dict(torch.load(args.log_directory + args.name + '/' + args.load_model+ '/{}_encoder.pt'.format(args.name)))
 	decoder.load_state_dict(torch.load(args.log_directory + args.name + '/' + args.load_model + '/{}_decoder.pt'.format(args.name)))
-	args.time_stamep = args.load_model[:12]
+	args.time_stamp = args.load_model[:12]
 
 log = args.log_directory + args.name + '/' + args.time_stamp + config + '/'
 writer = SummaryWriter(log)
@@ -71,18 +71,17 @@ def train(epoch):
 		params = encoder(input_data)
 		z_mu = params[:, 0]
 		z_logvar = params[:, 1]
+		q = D.Normal(z_mu, (z_logvar/ 2).exp())
 		reconstruction_loss = 0
 		for j in range(args.L):
-			epsilon = prior.sample().to(device)
-			z = z_mu + epsilon * (z_logvar / 2).exp()
+			z = q.rsample().to(device)
 			output_data = decoder(z)
 			reconstruction_loss += F.binary_cross_entropy(output_data, input_data.detach(), size_average=False)
 		reconstruction_loss /= args.L
-		q = D.Normal(z_mu, (z_logvar/ 2).exp())
 		kld_loss = D.kl_divergence(q, prior).sum()
 		r_loss += reconstruction_loss.item() 
 		k_loss += kld_loss.item()
-		loss = (reconstruction_loss + kld_loss)
+		loss = reconstruction_loss + kld_loss
 		loss.backward()
 		train_loss += loss.item()
 		optimizer.step()
@@ -92,9 +91,9 @@ def train(epoch):
 				100. * batch_idx / len(train_loader), loss.item() / len(input_data), time.time() - start_time))
 	print('====> Epoch: {} Average loss: {:.4f}\tTime: {:.4f}'.format(
 		epoch, train_loss / len(train_loader.dataset), time.time() - epoch_start_time))	
-	writer.add_scalars('Train loss', {'Reconstruction loss': r_loss / len(train_loader.dataset),
-											'KL divergence': k_loss / len(train_loader.dataset),
-											'Train loss': train_loss / len(train_loader.dataset)}, epoch)
+	writer.add_scalar('Train Reconstruction loss',  r_loss / len(train_loader.dataset), epoch)
+	writer.add_scalar('Train KL divergence',  k_loss / len(train_loader.dataset), epoch)
+	writer.add_scalar('Train loss',  train_loss / len(train_loader.dataset), epoch)
 
 def test(epoch):
 	encoder.eval()
@@ -109,9 +108,9 @@ def test(epoch):
 		params = encoder(input_data)
 		z_mu = params[:, 0]
 		z_logvar = params[:, 1]
+		q = D.Normal(z_mu, (z_logvar/ 2).exp())
 		output_data = decoder(z_mu)
 		reconstruction_loss = F.binary_cross_entropy(output_data, input_data, size_average=False)
-		q = D.Normal(z_mu, (z_logvar/ 2).exp())
 		kld_loss = D.kl_divergence(q, prior).sum()
 		r_loss += reconstruction_loss.item() 
 		k_loss += kld_loss.item()
@@ -123,9 +122,9 @@ def test(epoch):
 								  output_data[:n]])
 			writer.add_image('Reconstruction Image', comparison, epoch)
 	print('====> Test set loss: {:.4f}'.format(test_loss / len(test_loader.dataset)))
-	writer.add_scalars('Test loss', {'Reconstruction loss': r_loss / len(test_loader.dataset),
-											'KL divergence': k_loss / len(test_loader.dataset),
-											'Test loss': test_loss / len(test_loader.dataset)}, epoch)
+	writer.add_scalar('Test Reconstruction loss',  r_loss / len(test_loader.dataset), epoch)
+	writer.add_scalar('Test KL divergence',  k_loss / len(test_loader.dataset), epoch)
+	writer.add_scalar('Test loss',  test_loss / len(test_loader.dataset), epoch)
 
 def sample(epoch):
 	sample = D.Normal(torch.zeros(args.latent_size).to(device), torch.ones(args.latent_size).to(device))
