@@ -19,7 +19,9 @@ parser.add_argument('--latent-size', type=int, default=40, metavar='N')
 parser.add_argument('--K', type=int, default=10, metavar='N')
 parser.add_argument('--L', type=int, default=1, metavar='N')
 parser.add_argument('--anneal', action='store_true', default=False,
-					help='sample with pretrained model (default: False)')
+					help='use beta to anneal')
+parser.add_argument('--binarize', action='store_true', default=False,
+					help='binarize input')
 args = parser.parse_args()
 
 torch.manual_seed(args.seed)
@@ -33,7 +35,7 @@ else:
 config_list = [args.name, args.epochs, args.batch_size, args.lr,
 			   args.input_h, args.input_w,
 			   args.hidden_size, args.latent_size,
-			   args.K, args.L, args.anneal]
+			   args.K, args.L, args.anneal, args.binarize]
 if args.sample:
 	config_list = [args.load_model[13:], 'sample']
 config = ""
@@ -83,7 +85,8 @@ def train(epoch):
 		batch_size = input_data.size()[0]
 		prior = D.Normal(torch.zeros(batch_size, args.latent_size).to(device), torch.ones(batch_size, args.latent_size).to(device))
 		optimizer.zero_grad()
-		input_data = binarize(input_data)
+		if args.binarize:
+			input_data = binarize(input_data)
 		input_data = input_data.to(device)
 		z_params = encoder(input_data)
 		z_mu = z_params[:, 0]
@@ -127,7 +130,8 @@ def test(epoch):
 	for i, (input_data, label) in enumerate(test_loader):
 		batch_size = input_data.size()[0]
 		prior = D.Normal(torch.zeros(batch_size, args.latent_size).to(device), torch.ones(batch_size, args.latent_size).to(device))
-		input_data = binarize(input_data)
+		if args.binarize:
+			input_data = binarize(input_data)
 		input_data = input_data.to(device)
 		z_params = encoder(input_data)
 		z_mu = z_params[:, 0]
