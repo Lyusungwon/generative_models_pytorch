@@ -104,8 +104,9 @@ class Made(nn.Module):
         z = torch.cat([x, h], 1)
         m = self.s_net(z)
         s = self.m_net(z)
-        next_z = x * s.exp() + m
-        log_det = s.sum(1)
+        sig = F.sigmoid(s)
+        next_z = x * sig + m * (1 - sig)
+        log_det = torch.log(sig).sum(1)
         return next_z, log_det
 
 class MadeLayer(nn.Module):
