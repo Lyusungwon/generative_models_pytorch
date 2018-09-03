@@ -19,6 +19,10 @@ parser.add_argument('--input-w', type=int, default=28, metavar='N')
 parser.add_argument('--hidden-size', type=int, default=400, metavar='N')
 parser.add_argument('--latent-size', type=int, default=10, metavar='N')
 parser.add_argument('--L', type=int, default=1, metavar='N')
+parser.add_argument('--binarize', action='store_true', default=False,
+					help='binarize input')
+parser.add_argument('--mc', action='store_true', default=False,
+					help='sample kldivergence')
 args = parser.parse_args()
 
 torch.manual_seed(args.seed)
@@ -32,7 +36,7 @@ else:
 config_list = [args.name, args.epochs, args.batch_size, args.lr, 
 				args.input_h, args.input_w, 
 				args.hidden_size, args.latent_size,
-				args.L]
+				args.L, args.binarize, args.mc]
 if args.sample:
 	config_list.append('sample')
 config = ""
@@ -55,6 +59,10 @@ writer = SummaryWriter(log)
 
 optimizer = optim.Adam(list(encoder.parameters())+list(decoder.parameters()), lr = args.lr)
 
+def binarize(data):
+	data = data > 0.5
+	return data.float()
+
 def train(epoch):
 	epoch_start_time = time.time()
 	train_loss = 0
@@ -67,18 +75,25 @@ def train(epoch):
 		batch_size = input_data.size()[0]
 		prior = D.Normal(torch.zeros(batch_size, args.latent_size).to(device), torch.ones(batch_size, args.latent_size).to(device))
 		optimizer.zero_grad()
+		if args.binarize:
+			input_data = binarize(input_data)
 		input_data = input_data.to(device)
 		params = encoder(input_data)
 		z_mu = params[:, 0]
 		z_logvar = params[:, 1]
 		q = D.Normal(z_mu, (z_logvar/ 2).exp())
 		reconstruction_loss = 0
+		kld_loss = 0
 		for j in range(args.L):
 			z = q.rsample().to(device)
 			output_data = decoder(z)
 			reconstruction_loss += F.binary_cross_entropy(output_data, input_data.detach(), size_average=False)
+			if args.mc:
+				kld_loss += q.log_prob(z).sum() - prior.log_prob(z).sum()
 		reconstruction_loss /= args.L
-		kld_loss = D.kl_divergence(q, prior).sum()
+		kld_loss /= args.L
+		if not args.mc:
+			kld_loss = D.kl_divergence(q, prior).sum()
 		r_loss += reconstruction_loss.item() 
 		k_loss += kld_loss.item()
 		loss = reconstruction_loss + kld_loss
@@ -104,6 +119,8 @@ def test(epoch):
 	for i, (input_data, label) in enumerate(test_loader):
 		batch_size = input_data.size()[0]
 		prior = D.Normal(torch.zeros(batch_size, args.latent_size).to(device), torch.ones(batch_size, args.latent_size).to(device))
+		if args.binarize:
+			input_data = binarize(input_data)
 		input_data = input_data.to(device)
 		params = encoder(input_data)
 		z_mu = params[:, 0]
@@ -111,7 +128,10 @@ def test(epoch):
 		q = D.Normal(z_mu, (z_logvar/ 2).exp())
 		output_data = decoder(z_mu)
 		reconstruction_loss = F.binary_cross_entropy(output_data, input_data, size_average=False)
-		kld_loss = D.kl_divergence(q, prior).sum()
+		if args.mc:
+			kld_loss += q.log_prob(z_mu).sum() - prior.log_prob(z_mu).sum()
+		else:
+			kld_loss = D.kl_divergence(q, prior).sum()
 		r_loss += reconstruction_loss.item() 
 		k_loss += kld_loss.item()
 		loss = reconstruction_loss + kld_loss
