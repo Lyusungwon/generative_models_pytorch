@@ -129,7 +129,7 @@ def test(epoch):
 		output_data = decoder(z_mu)
 		reconstruction_loss = F.binary_cross_entropy(output_data, input_data, size_average=False)
 		if args.mc:
-			kld_loss += q.log_prob(z_mu).sum() - prior.log_prob(z_mu).sum()
+			kld_loss = q.log_prob(z_mu).sum() - prior.log_prob(z_mu).sum()
 		else:
 			kld_loss = D.kl_divergence(q, prior).sum()
 		r_loss += reconstruction_loss.item() 
