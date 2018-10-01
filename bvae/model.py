@@ -1,7 +1,4 @@
-import torch
 from torch import nn
-import torch.nn.functional as F
-
 
 class Encoder(nn.Module):
 	def __init__(self, channel_size = 3, filter_size = 64, kernel_size = 3, stride_size = 2, layer_size = 5):
@@ -10,7 +7,7 @@ class Encoder(nn.Module):
 		net = nn.ModuleList([])
 		for i in range(layer_size - 1):
 			net.append(nn.Conv2d(prev_filter, filter_size, kernel_size, stride_size, (kernel_size - 1)//2))
-			net.append(nn.BatchNorm2d(filter_size))
+			# net.append(nn.BatchNorm2d(filter_size))
 			net.append(nn.ReLU(inplace=True))
 			prev_filter = filter_size
 		net.append(nn.Conv2d(prev_filter, 2, kernel_size, stride_size, (kernel_size - 1)//2))
@@ -28,7 +25,7 @@ class Decoder(nn.Module):
 		net = nn.ModuleList([])
 		for i in range(layer_size - 1):
 			net.append(nn.ConvTranspose2d(prev_filter, filter_size, kernel_size, stride_size, (kernel_size - 1)//2, (kernel_size - 1)//2 * 2 - 1))
-			net.append(nn.BatchNorm2d(filter_size))
+			# net.append(nn.BatchNorm2d(filter_size))
 			net.append(nn.ReLU(inplace=True))
 			prev_filter = filter_size
 		net.append(nn.ConvTranspose2d(prev_filter, channel_size, kernel_size, stride_size, (kernel_size - 1)//2, (kernel_size - 1)//2 * 2 - 1))
