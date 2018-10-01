@@ -104,11 +104,11 @@ def train(epoch):
             writer.add_scalar('Batch loss', loss / batch_size, idx)
             writer.add_scalar('Batch Reconstruction Loss', recon_loss / batch_size, idx)
             writer.add_scalar('Batch KL Divergence Loss', kld_loss.sum() / batch_size, idx)
-            summary = {}
-            kl_divergence = kld_loss.sum(0).view(-1)
-            for i in range(kl_divergence.size()[0]):
-                summary['Latent variable {}'.format(i)] = kl_divergence[i] / batch_size
-            writer.add_scalars('Batch KL Divergence Loss(detail)', summary, idx)
+            # summary = {}
+            # kl_divergence = kld_loss.sum(0).view(-1)
+            # for i in range(kl_divergence.size()[0]):
+            #     summary['Latent variable {}'.format(i)] = kl_divergence[i] / batch_size
+            # writer.add_scalars('Batch KL Divergence Loss(detail)', summary, idx)
             writer.add_scalar('Batch time', time.time() - start_time, idx)
             start_time = time.time()
 
