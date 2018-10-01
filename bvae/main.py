@@ -151,7 +151,7 @@ def test(epoch):
     writer.add_scalar('Test KL Divergence Loss', k_loss / len(test_loader.dataset), epoch)
 
 for epoch in range(args.start_epoch, args.start_epoch + args.epochs):
-    # train(epoch)
+    train(epoch)
     test(epoch)
     torch.save(encoder.state_dict(), log + 'bvae_encoder.pt')
     torch.save(decoder.state_dict(), log + 'bvae_decoder.pt')
