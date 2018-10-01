@@ -16,12 +16,12 @@ parser.add_argument('--dataset', type=str, default='clevr')
 parser.add_argument('--channel-size', type=int, default=3)
 parser.add_argument('--input-h', type=int, default=128, metavar='N')
 parser.add_argument('--input-w', type=int, default=128, metavar='N')
-parser.add_argument('--filter-size', type=int, default=64, metavar='N')
+parser.add_argument('--filter-size', type=int, default=256, metavar='N')
 parser.add_argument('--kernel-size', type=int, default=3, metavar='N')
 parser.add_argument('--stride-size', type=int, default=2)
 parser.add_argument('--layer-size', type=int, default=5)
 # parser.add_argument('--hidden-size', type=int, default=1024, metavar='N')
-# parser.add_argument('--latent-size', type=int, default=24, metavar='N')
+parser.add_argument('--latent-size', type=int, default=10, metavar='N')
 parser.add_argument('--L', type=int, default=1, metavar='N')
 parser.add_argument('--beta', type=int, default=1, metavar='N')
 
@@ -37,8 +37,8 @@ else:
 
 config_list = [args.name, args.dataset, args.batch_size, args.epochs, args.lr, args.device, 
                 args.channel_size, args.input_h, args.input_w, 
-                args.filter_size, args.kernel_size, args.stride_size, args.layer_size,
-                # args.hidden_size, args.latent_size, 
+                args.filter_size, args.kernel_size, args.stride_size, args.layer_size, args.latent_size, 
+                # args.hidden_size, 
                 args.L, args.beta]
 config = '_'.join(map(str, config_list))
 print("Config:", config)
@@ -48,8 +48,8 @@ test_loader = dataloader.test_loader(args.dataset, args.data_directory, args.bat
 
 # encoder = model.Encoder(args.input_h, args.input_w, args.hidden_size, args.latent_size).to(args.device)
 # decoder = model.Decoder(args.input_h, args.input_w, args.hidden_size, args.latent_size).to(args.device)
-encoder = model.Encoder(args.channel_size, args.filter_size, args.kernel_size, args.stride_size, args.layer_size).to(args.device)
-decoder = model.Decoder(args.channel_size, args.filter_size, args.kernel_size, args.stride_size, args.layer_size).to(args.device)
+encoder = model.Encoder(args.channel_size, args.filter_size, args.kernel_size, args.stride_size, args.layer_size, args.latent_size).to(args.device)
+decoder = model.Decoder(args.channel_size, args.filter_size, args.kernel_size, args.stride_size, args.layer_size, args.latent_size).to(args.device)
 
 if args.load_model != '000000000000':
     encoder.load_state_dict(torch.load(args.log_directory + args.name + '/' + args.load_model + 'bvae_encoder.pt')).to(args.device)

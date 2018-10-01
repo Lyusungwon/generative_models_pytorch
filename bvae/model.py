@@ -1,8 +1,9 @@
 from torch import nn
 
 class Encoder(nn.Module):
-	def __init__(self, channel_size = 3, filter_size = 64, kernel_size = 3, stride_size = 2, layer_size = 5):
+	def __init__(self, channel_size = 3, filter_size = 64, kernel_size = 3, stride_size = 2, layer_size = 5, latent_size = 10):
 		super(Encoder, self).__init__()
+		self.latent_size = latent_size
 		prev_filter = channel_size
 		net = nn.ModuleList([])
 		for i in range(layer_size - 1):
@@ -10,18 +11,20 @@ class Encoder(nn.Module):
 			# net.append(nn.BatchNorm2d(filter_size))
 			net.append(nn.ReLU(inplace=True))
 			prev_filter = filter_size
-		net.append(nn.Conv2d(prev_filter, 2, kernel_size, stride_size, (kernel_size - 1)//2))
+		net.append(nn.Conv2d(prev_filter, 2 * latent_size, kernel_size, stride_size, (kernel_size - 1)//2))
 		self.net = nn.Sequential(*net)
 
 	def forward(self, x):
 		x = self.net(x)
+		n, l, h, w = x.size()
+		x = x.view(n, 2, self.latent_size, h, w)
 		return x
 
 class Decoder(nn.Module):
-	def __init__(self, channel_size = 3, filter_size = 64, kernel_size = 3, stride_size = 2, layer_size = 5):
+	def __init__(self, channel_size = 3, filter_size = 64, kernel_size = 3, stride_size = 2, layer_size = 5, latent_size = 10):
 		super(Decoder, self).__init__()
 		self.channel_size = channel_size
-		prev_filter = 1
+		prev_filter = latent_size
 		net = nn.ModuleList([])
 		for i in range(layer_size - 1):
 			net.append(nn.ConvTranspose2d(prev_filter, filter_size, kernel_size, stride_size, (kernel_size - 1)//2, (kernel_size - 1)//2 * 2 - 1))
