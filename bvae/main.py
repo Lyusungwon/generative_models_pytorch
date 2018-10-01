@@ -128,7 +128,6 @@ def test(epoch):
     k_loss = 0    
     for batch_idx, input_data in enumerate(test_loader):
         input_data = input_data.to(args.device)
-        print(input_data.size())
         params = encoder(input_data)
         z_mu = params[:, 0]
         z_logvar = params[:, 1]
@@ -139,8 +138,8 @@ def test(epoch):
         kld_loss = D.kl_divergence(q, prior).sum()
         loss = recon_loss + args.beta * kld_loss
         test_loss += loss.item()
-        r_loss += recon_loss
-        k_loss += kld_loss
+        r_loss += recon_loss.item()
+        k_loss += kld_loss.item()
         if batch_idx == 0:
             n = min(input_data.size(0), 8)
             comparison = torch.cat([input_data[:n],
