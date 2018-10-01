@@ -36,7 +36,6 @@ class Decoder(nn.Module):
 		self.net = nn.Sequential(*net)
 
 	def forward(self, x):
-		x = x.unsqueeze(1)
 		x = self.net(x)
 		return x
 
