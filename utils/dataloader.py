@@ -209,9 +209,9 @@ class Clevr(Dataset):
             print('qa_idx_data_{}.pkl saved'.format(mode))
 
     def load_data(self):
-        with open(self.root_dir + '{}/qa_idx_data_{}.pkl'.format(self.mode, self.mode), 'rb') as file:
+        with open(self.root_dir + 'qa_idx_data_{}.pkl'.format(self.mode), 'rb') as file:
             self.qa_idx_data = pickle.load(file)
-        with open(self.root_dir + '{}/data_dict.pkl'.format(self.mode), 'rb') as file:
+        with open(self.root_dir + 'data_dict.pkl', 'rb') as file:
             self.data_dict = pickle.load(file)
         self.word_to_idx = self.data_dict['question']['word_to_idx']
         self.idx_to_word = self.data_dict['question']['idx_to_word']
