@@ -75,12 +75,15 @@ def train(epoch):
         optimizer.zero_grad()
         input_data = input_data.to(args.device)
         params = encoder(input_data)
-        z_mu = params[:, 0].squeeze(1)
-        z_logvar = params[:, 1].squeeze(1)
+        print(params.size())
+        z_mu = params[:, 0]
+        print(z_mu.size())
+        z_logvar = params[:, 1]
         q = D.Normal(z_mu, (z_logvar / 2).exp())
         recon_loss = 0
         for j in range(args.L):
             z = q.rsample().to(device)
+            print(z.size())
             output_data = decoder(z)
             recon_loss += F.binary_cross_entropy(output_data, input_data, size_average=False)
         recon_loss /= args.L
@@ -129,8 +132,8 @@ def test(epoch):
     for batch_idx, input_data in enumerate(test_loader):
         input_data = input_data.to(args.device)
         params = encoder(input_data)
-        z_mu = params[:, 0].squeeze(1)
-        z_logvar = params[:, 1].squeeze(1)
+        z_mu = params[:, 0]
+        z_logvar = params[:, 1]
         q = D.Normal(z_mu, (z_logvar / 2).exp())
         output_data = decoder(z_mu)
         recon_loss = F.binary_cross_entropy(output_data, input_data, size_average=False)
