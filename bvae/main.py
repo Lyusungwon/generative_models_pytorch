@@ -52,8 +52,8 @@ encoder = model.Encoder(args.channel_size, args.filter_size, args.kernel_size, a
 decoder = model.Decoder(args.channel_size, args.filter_size, args.kernel_size, args.stride_size, args.layer_size).to(args.device)
 
 if args.load_model != '000000000000':
-    encoder.load_state_dict(torch.load(args.log_directory + args.name + '/' + args.load_model + 'bvae_encoder.pt'))
-    decoder.load_state_dict(torch.load(args.log_director + args.name + '/' + args.load_model + '/bvae_decoder.pt'))
+    encoder.load_state_dict(torch.load(args.log_directory + args.name + '/' + args.load_model + 'bvae_encoder.pt')).to(args.device)
+    decoder.load_state_dict(torch.load(args.log_director + args.name + '/' + args.load_model + '/bvae_decoder.pt')).to(args.device)
     args.time_stamp = args.load_model[:12]
     print('Model {} loaded.'.format(args.load_model))
 
@@ -128,6 +128,7 @@ def test(epoch):
     k_loss = 0    
     for batch_idx, input_data in enumerate(test_loader):
         input_data = input_data.to(args.device)
+        print(input_data.size())
         params = encoder(input_data)
         z_mu = params[:, 0]
         z_logvar = params[:, 1]
@@ -135,11 +136,11 @@ def test(epoch):
         output_data = decoder(z_mu)
         recon_loss = F.binary_cross_entropy(output_data, input_data, size_average=False)
         prior = D.Normal(torch.zeros_like(z_mu).to(device), torch.ones_like(z_mu).to(device))
-        kld_loss = D.kl_divergence(q, prior)
+        kld_loss = D.kl_divergence(q, prior).sum()
         loss = recon_loss + args.beta * kld_loss
-        test_loss += loss.data
+        test_loss += loss.item()
         r_loss += recon_loss
-        k_loss += kld_loss.sum()        
+        k_loss += kld_loss
         if batch_idx == 0:
             n = min(input_data.size(0), 8)
             comparison = torch.cat([input_data[:n],
